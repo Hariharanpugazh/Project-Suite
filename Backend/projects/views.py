@@ -2,6 +2,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from django.conf import settings
 from pymongo import MongoClient
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 import random
 import logging
 from bson.objectid import ObjectId
@@ -104,3 +106,42 @@ def get_projects(request):
     except Exception as e:
         print(f"Error fetching projects: {str(e)}")
         return Response({"error": "Could not fetch projects"}, status=500)
+    
+# Helper function to serialize MongoDB documents
+def serialize_mongo_document(document):
+    def serialize_value(value):
+        if isinstance(value, ObjectId):
+            return str(value)
+        elif isinstance(value, bytes):
+            # Encode binary data as Base64 string
+            return base64.b64encode(value).decode("utf-8")
+        elif isinstance(value, dict):
+            # Recursively serialize nested dictionaries
+            return {k: serialize_value(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            # Recursively serialize lists
+            return [serialize_value(v) for v in value]
+        else:
+            return value
+
+    if document:
+        return {key: serialize_value(value) for key, value in document.items()}
+    return document
+
+@csrf_exempt
+def get_project_details(request, product_id):
+    if request.method == "GET":
+        try:
+            # Fetch the project using product_id
+            project = collection.find_one({"product_id": int(product_id)})
+
+            if project:
+                project = serialize_mongo_document(project)
+                return JsonResponse(project, safe=False)
+            else:
+                return JsonResponse({"error": "Project not found."}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid HTTP method."}, status=405)

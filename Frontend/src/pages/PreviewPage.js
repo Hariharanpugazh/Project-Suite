@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const PreviewPage = () => {
     const [projects, setProjects] = useState([]);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -31,6 +33,10 @@ const PreviewPage = () => {
         project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.domain.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    const handleViewProject = (product_id) => {
+        navigate(`/project/${product_id}`); // Use product_id for navigation
+    };
 
     if (error) {
         return <div className="text-red-500 text-center mt-4">{error}</div>;
@@ -73,17 +79,15 @@ const PreviewPage = () => {
                                 )}
                                 <div className="p-4">
                                     <h2 className="text-xl font-semibold text-gray-800 mb-2">{project.project_name}</h2>
-                                    {/* <p className="text-sm text-gray-500 mb-2">{project.tagline}</p> */}
+                                    <p className="text-sm text-gray-500 mb-2">{project.tagline}</p>
                                     <p className="text-sm text-gray-700 mb-4">{project.description}</p>
                                     <p className="text-sm text-gray-700 mb-4"><strong>Domain:</strong> {project.domain}</p>
-                                    <a
-                                        href={project.github_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-sm font-medium text-blue-600 hover:underline"
+                                    <button
+                                        onClick={() => handleViewProject(project.product_id)} // Use product_id for navigation
+                                        className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                                     >
-                                        GitHub Link
-                                    </a>
+                                        View Project
+                                    </button>
                                 </div>
                             </div>
                         ))}
