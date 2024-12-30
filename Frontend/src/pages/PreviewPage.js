@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const PreviewPage = () => {
     const [projects, setProjects] = useState([]);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedCollege, setSelectedCollege] = useState(""); // New state for filter
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -25,12 +28,26 @@ const PreviewPage = () => {
         fetchProjects();
     }, []);
 
-    const filteredProjects = projects.filter(project =>
-        project.project_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.domain.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredProjects = projects.filter(project => {
+        const matchesSearch = project.project_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            project.tagline.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            project.domain.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCollege = selectedCollege ? project.college === selectedCollege : true;
+        return matchesSearch && matchesCollege;
+    });
+
+    const handleViewProject = (product_id) => {
+        navigate(`/project/${product_id}`);
+    };
+
+    const handleFilterClick = (college) => {
+        setSelectedCollege(college);
+    };
+
+    const handleProjectUpload = () => {
+        navigate("/formpage");
+    };
 
     if (error) {
         return <div className="text-red-500 text-center mt-4">{error}</div>;
@@ -40,8 +57,14 @@ const PreviewPage = () => {
         <div className="min-h-screen bg-gray-50">
             <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-blue-600">SNS Project Suite</h1>
-                <nav>
+                <nav className="flex items-center">
                     <a href="#" className="text-blue-600 hover:underline mr-4">Home</a>
+                    <button
+                        onClick={handleProjectUpload}
+                        className="bg-blue-500 text-white px-4 py-2 rounded flex items-center hover:bg-blue-600 mr-4"
+                    >
+                        <span className="material-icons mr-2">add</span> Project Upload
+                    </button>
                     <a href="#" className="text-red-600 hover:underline">Logout</a>
                 </nav>
             </header>
@@ -53,8 +76,34 @@ const PreviewPage = () => {
                         placeholder="Search projects..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                     />
+                    <div className="mb-4">
+                        <button
+                            onClick={() => handleFilterClick("SNSCE")}
+                            className={`px-4 py-2 rounded ${selectedCollege === "SNSCE" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"} mr-2`}
+                        >
+                            SNSCE
+                        </button>
+                        <button
+                            onClick={() => handleFilterClick("SNSCT")}
+                            className={`px-4 py-2 rounded ${selectedCollege === "SNSCT" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"} mr-2`}
+                        >
+                            SNSCT
+                        </button>
+                        <button
+                            onClick={() => handleFilterClick("SNSCANS")}
+                            className={`px-4 py-2 rounded ${selectedCollege === "SNSCANS" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"}`}
+                        >
+                            SNSCANS
+                        </button>
+                        <button
+                            onClick={() => handleFilterClick("")}
+                            className="px-4 py-2 bg-gray-300 rounded ml-2"
+                        >
+                            Clear Filter
+                        </button>
+                    </div>
                 </aside>
 
                 <main className="flex-1 p-6">
@@ -73,17 +122,18 @@ const PreviewPage = () => {
                                 )}
                                 <div className="p-4">
                                     <h2 className="text-xl font-semibold text-gray-800 mb-2">{project.project_name}</h2>
-                                    {/* <p className="text-sm text-gray-500 mb-2">{project.tagline}</p> */}
+                                    <p className="text-sm text-gray-500 mb-2">{project.tagline}</p>
                                     <p className="text-sm text-gray-700 mb-4">{project.description}</p>
                                     <p className="text-sm text-gray-700 mb-4"><strong>Domain:</strong> {project.domain}</p>
-                                    <a
-                                        href={project.github_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-sm font-medium text-blue-600 hover:underline"
+                                    <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold mr-2 px-2.5 py-0.5 rounded">
+                                        {project.college}
+                                    </span>
+                                    <button
+                                        onClick={() => handleViewProject(project.product_id)}
+                                        className="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                                     >
-                                        GitHub Link
-                                    </a>
+                                        View Project
+                                    </button>
                                 </div>
                             </div>
                         ))}
