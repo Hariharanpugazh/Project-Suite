@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const FormPage = () => {
     const [currentSection, setCurrentSection] = useState(1);
@@ -27,6 +28,9 @@ const FormPage = () => {
         githubUrl: "",
         ppt: null,
     });
+
+    const [isLoading, setIsLoading] = useState(false); // Loading state
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value, files } = e.target;
@@ -63,6 +67,7 @@ const FormPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setIsLoading(true); // Show loading indicator
 
         const formDataToSend = new FormData();
 
@@ -96,6 +101,7 @@ const FormPage = () => {
                 alert(
                     `Project saved successfully! Product ID: ${result.product_id}`
                 );
+                navigate("/"); // Redirect to localhost:3000
             } else {
                 console.error(result);
                 alert("Error saving project. Please check the console for details.");
@@ -103,6 +109,8 @@ const FormPage = () => {
         } catch (error) {
             console.error(error);
             alert("An error occurred. Please try again.");
+        } finally {
+            setIsLoading(false); // Hide loading indicator
         }
     };
 
@@ -490,6 +498,12 @@ const FormPage = () => {
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
             <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+                {isLoading && (
+                    <div className="flex justify-center items-center mb-4">
+                        <div className="loader border-t-4 border-blue-500 w-8 h-8 rounded-full animate-spin"></div>
+                        <p className="ml-2 text-blue-500">Submitting...</p>
+                    </div>
+                )}
                 <form onSubmit={handleSubmit}>
                     {renderCurrentFields()}
                     <div className="flex justify-between mt-6">
@@ -514,6 +528,7 @@ const FormPage = () => {
                             <button
                                 type="submit"
                                 className="bg-green-500 text-white px-4 py-2 rounded"
+                                disabled={isLoading} // Disable button while loading
                             >
                                 Submit
                             </button>
