@@ -10,7 +10,7 @@ const FormPage = () => {
     techStack: "",
     githubUrl: "",
     demoUrl: "",
-    image: null,
+    image: null, 
     ppt: null,
   });
 
