@@ -84,6 +84,7 @@ def login_user(request):
 def save_project(request):
     # Extract and sanitize general project fields
     project_data = {
+        "staff_id" : sanitize_field(request.data.get("staff_id")),
         "title": sanitize_field(request.data.get("title")),
         "description": sanitize_field(request.data.get("description")),
         "college": sanitize_field(request.data.get("college")),
@@ -240,6 +241,94 @@ def get_projects(request):
 
     except Exception as e:
         print(f"Error fetching projects: {str(e)}")
+        return Response({"error": "Could not fetch projects"}, status=500)
+    
+@api_view(['GET'])
+def get_projects_by_staff_id(request):
+    try:
+        # Extract staff_id from the request parameters
+        staff_id = request.GET.get('staff_id', None)
+        if not staff_id:
+            return Response({"error": "staff_id is required"}, status=400)
+
+        # Filter projects by staff_id
+        projects = collection.find({"staff_id": staff_id})
+        project_list = []
+
+        for project in projects:
+            try:
+                project_data = {
+                    "title": project.get("title", ""),
+                    "description": project.get("description", ""),
+                    "college": project.get("college", ""),
+                    "problem_statement": project.get("problem_statement", ""),
+                    "key_features": project.get("key_features", ""),
+                    "scope": project.get("scope", ""),
+                    "presentation_layer": project.get("presentation_layer", ""),
+                    "application_layer": project.get("application_layer", ""),
+                    "data_layer": project.get("data_layer", ""),
+                    "methodology": project.get("methodology", ""),
+                    "tools": project.get("tools", ""),
+                    "api": project.get("api", ""),
+                    "team_count": project.get("team_count", 0),
+                    "github_url": project.get("github_url", ""),
+                    "demo_url": project.get("demo_url", ""),
+                    "ppt_url": project.get("ppt_url", ""),
+                    "tags": project.get("tags", []),
+                    "domains": project.get("domains", []),
+                    "product_id": project.get("product_id", ""),
+                    "team_members": [],
+                    "mentors": {
+                        "associate_project_mentor": {},
+                        "associate_tech_mentor": {},
+                        "dt_mentor": {},
+                    },
+                }
+
+                # Process team members
+                if "team_members" in project:
+                    for member in project["team_members"]:
+                        project_data["team_members"].append({
+                            "name": member.get("name", ""),
+                            "image": {
+                                "content_type": "image/png",  # Ensure content type is included
+                                "data": base64.b64encode(member["image"]).decode("utf-8")
+                                if member.get("image")
+                                else None,
+                            },
+                        })
+
+                # Process mentors
+                mentors = project.get("mentors", {})
+                for key, mentor in mentors.items():
+                    if mentor:
+                        project_data["mentors"][key] = {
+                            "name": mentor.get("name", ""),
+                            "image": {
+                                "content_type": "image/png",  # Ensure content type is included
+                                "data": base64.b64encode(mentor["image"]).decode("utf-8")
+                                if mentor.get("image")
+                                else None,
+                            },
+                        }
+
+                # Process project image
+                if "image" in project and project["image"]:
+                    project_data["image"] = {
+                        "content_type": "image/png",  # Ensure content type is included
+                        "data": base64.b64encode(project["image"]).decode("utf-8"),
+                    }
+
+                project_list.append(project_data)
+
+            except Exception as e:
+                print(f"Error processing project: {project.get('_id', 'unknown')} - {str(e)}")
+                continue
+
+        return Response(project_list, status=200)
+
+    except Exception as e:
+        print(f"Error fetching projects by staff_id: {str(e)}")
         return Response({"error": "Could not fetch projects"}, status=500)
 
     
