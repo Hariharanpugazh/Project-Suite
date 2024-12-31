@@ -5,18 +5,24 @@ import PreviewPage from "./pages/PreviewPage";
 import ProjectDetailPage from "./pages/ProjectDetailPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import StaffDashboard from "./pages/staffdashboard";
+import StaffDashboard from "../src/staff/pages/staffdashboard";
+import StaffViewProject from "../src/staff/pages/StaffViewProject";
 
 function App() {
     return (
         <Router>
             <Routes>
+                {/* userflow */}
                 <Route path="/" element={<PreviewPage />} />
-                <Route path="/:staff_id/formpage" element={<FormPage />} />
                 <Route path="/project/:product_id" element={<ProjectDetailPage />} />
+
                 <Route path="/loginpage" element={<LoginPage />} /> {/* New login route */}
                 <Route path="/register" element={<RegisterPage />} /> {/* New register route */}
+
+                {/* Staffflow */}
                 <Route path="/:staff_id/staffdashboard" element={<StaffDashboard />} />
+                <Route path="/:staff_id/staffviewproject" element={<StaffViewProject />} />
+                <Route path="/:staff_id/formpage" element={<FormPage />} />
             </Routes>
         </Router>
     );
