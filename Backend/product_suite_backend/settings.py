@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'projects',  # Your app
     'rest_framework',  # For API handling
     'corsheaders',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
