@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FaGithub, FaYoutube } from "react-icons/fa";
+import { FaGithub, FaYoutube, FaEdit, FaSave, FaTimes } from "react-icons/fa";
 import { motion } from "framer-motion";
 
 const ProjectDetailPage = () => {
-  const { product_id } = useParams();
+  const { staff_id, product_id } = useParams();
   const [project, setProject] = useState(null);
   const [error, setError] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editedProject, setEditedProject] = useState(null);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -14,6 +16,7 @@ const ProjectDetailPage = () => {
         const response = await fetch(`http://127.0.0.1:8000/api/projects/${product_id}/`);
         const data = await response.json();
         setProject(data);
+        setEditedProject(data);
       } catch (error) {
         console.error("Error fetching project:", error);
         setError("An error occurred while fetching the project.");
@@ -22,6 +25,29 @@ const ProjectDetailPage = () => {
 
     fetchProject();
   }, [product_id]);
+
+  const handleSave = async () => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/projects/${product_id}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedProject),
+      });
+      const data = await response.json();
+      setProject(data);
+      setEditMode(false);
+    } catch (error) {
+      console.error("Error saving project:", error);
+      setError("An error occurred while saving the project.");
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedProject(project);
+    setEditMode(false);
+  };
 
   if (error) {
     return <div className="text-red-500 text-center mt-4">{error}</div>;
@@ -33,6 +59,32 @@ const ProjectDetailPage = () => {
 
   const getImageSrc = (image) => {
     return image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}`;
+  };
+
+  const handleInputChange = (e, field) => {
+    const { value } = e.target;
+    setEditedProject((prevProject) => ({
+      ...prevProject,
+      [field]: value,
+    }));
+  };
+
+  const handleTeamMemberChange = (index, field, value) => {
+    const newTeamMembers = [...editedProject.team_members];
+    newTeamMembers[index][field] = value;
+    setEditedProject((prevProject) => ({
+      ...prevProject,
+      team_members: newTeamMembers,
+    }));
+  };
+
+  const handleMentorChange = (key, field, value) => {
+    const newMentors = { ...editedProject.mentors };
+    newMentors[key][field] = value;
+    setEditedProject((prevProject) => ({
+      ...prevProject,
+      mentors: newMentors,
+    }));
   };
 
   return (
@@ -71,13 +123,49 @@ const ProjectDetailPage = () => {
         >
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold mb-4">Key Features</h3>
-            <p>{project.key_features || "No key features available"}</p>
+            {editMode ? (
+              <textarea
+                value={editedProject.key_features || ""}
+                onChange={(e) => handleInputChange(e, "key_features")}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            ) : (
+              <p>{project.key_features || "No key features available"}</p>
+            )}
           </div>
           <div className="bg-white shadow-md rounded-lg p-6">
             <h3 className="text-2xl font-bold mb-4">Layers</h3>
-            <p>Presentation: {project.presentation_layer || "N/A"}</p>
-            <p>Application: {project.application_layer || "N/A"}</p>
-            <p>Data: {project.data_layer || "N/A"}</p>
+            {editMode ? (
+              <>
+                <input
+                  type="text"
+                  value={editedProject.presentation_layer || ""}
+                  onChange={(e) => handleInputChange(e, "presentation_layer")}
+                  className="w-full p-2 border border-gray-300 rounded-md mb-2"
+                  placeholder="Presentation Layer"
+                />
+                <input
+                  type="text"
+                  value={editedProject.application_layer || ""}
+                  onChange={(e) => handleInputChange(e, "application_layer")}
+                  className="w-full p-2 border border-gray-300 rounded-md mb-2"
+                  placeholder="Application Layer"
+                />
+                <input
+                  type="text"
+                  value={editedProject.data_layer || ""}
+                  onChange={(e) => handleInputChange(e, "data_layer")}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  placeholder="Data Layer"
+                />
+              </>
+            ) : (
+              <>
+                <p>Presentation: {project.presentation_layer || "N/A"}</p>
+                <p>Application: {project.application_layer || "N/A"}</p>
+                <p>Data: {project.data_layer || "N/A"}</p>
+              </>
+            )}
           </div>
         </motion.div>
 
@@ -129,29 +217,49 @@ const ProjectDetailPage = () => {
         >
           <h3 className="text-2xl font-bold mb-4">Team & Mentors</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {project.team_members.map((member, index) => (
+            {editedProject.team_members.map((member, index) => (
               <div key={index} className="flex items-center space-x-4">
                 <img
                   src={getImageSrc(member.image)}
                   alt={member.name}
                   className="w-12 h-12 rounded-full object-cover"
                 />
-                <p className="text-gray-700 font-medium">{member.name}</p>
+                {editMode ? (
+                  <input
+                    type="text"
+                    value={member.name}
+                    onChange={(e) => handleTeamMemberChange(index, "name", e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Member Name"
+                  />
+                ) : (
+                  <p className="text-gray-700 font-medium">{member.name}</p>
+                )}
               </div>
             ))}
           </div>
           <div className="mt-6">
             <h4 className="text-xl font-semibold text-gray-800 mb-2">Mentors</h4>
-            {Object.entries(project.mentors).map(([key, mentor], index) => (
+            {Object.entries(editedProject.mentors).map(([key, mentor], index) => (
               <div key={index} className="flex items-center space-x-4 mb-4">
                 <img
                   src={getImageSrc(mentor.image)}
                   alt={mentor.name}
                   className="w-12 h-12 rounded-full object-cover"
                 />
-                <p className="text-gray-700 font-medium">
-                  {key.replace(/_/g, " ").toUpperCase()}: {mentor.name}
-                </p>
+                {editMode ? (
+                  <input
+                    type="text"
+                    value={mentor.name}
+                    onChange={(e) => handleMentorChange(key, "name", e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Mentor Name"
+                  />
+                ) : (
+                  <p className="text-gray-700 font-medium">
+                    {key.replace(/_/g, " ").toUpperCase()}: {mentor.name}
+                  </p>
+                )}
               </div>
             ))}
           </div>
@@ -171,6 +279,33 @@ const ProjectDetailPage = () => {
             <a href={project.ppt_url || "#"} className="text-blue-600 hover:underline">PPT</a>
           </div>
         </motion.div>
+
+        {/* Edit Button */}
+        <div className="flex justify-end mt-10 space-x-4">
+          {editMode ? (
+            <>
+              <button
+                className="flex items-center bg-red-600 text-white px-4 py-2 rounded-md shadow hover:bg-red-700 transition"
+                onClick={handleCancel}
+              >
+                <FaTimes className="mr-2" /> Cancel
+              </button>
+              <button
+                className="flex items-center bg-green-600 text-white px-4 py-2 rounded-md shadow hover:bg-green-700 transition"
+                onClick={handleSave}
+              >
+                <FaSave className="mr-2" /> Save
+              </button>
+            </>
+          ) : (
+            <button
+              className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md shadow hover:bg-blue-700 transition"
+              onClick={() => setEditMode(true)}
+            >
+              <FaEdit className="mr-2" /> Edit
+            </button>
+          )}
+        </div>
       </main>
     </div>
   );

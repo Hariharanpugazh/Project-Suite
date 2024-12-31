@@ -4,7 +4,12 @@ import { Eye } from "lucide-react";
 
 const ProjectCard = ({ project }) => {
   const handleViewProject = () => {
-    window.location.href = `/project/${project.product_id}`;
+    const staff_id = localStorage.getItem("staff_id"); // Retrieve staff ID from local storage
+    if (staff_id) {
+      window.location.href = `/${staff_id}/staffviewproject/${project.product_id}`;
+    } else {
+      console.error("Staff ID is not found in local storage.");
+    }
   };
 
   return (
@@ -29,17 +34,14 @@ const ProjectCard = ({ project }) => {
         </div>
       </div>
       <div className="p-4">
-        {/* Project Description */}
         <p className="text-gray-600 mb-4 h-20 overflow-hidden">{project.description}</p>
 
-        {/* College */}
         <div className="mb-4">
           <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
             {project.college}
           </span>
         </div>
 
-        {/* Domains and Tags */}
         <div className="flex flex-wrap gap-2 mb-4">
           {project.domains?.map((domain, idx) => (
             <span
@@ -59,7 +61,6 @@ const ProjectCard = ({ project }) => {
           ))}
         </div>
 
-        {/* View Project Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

@@ -21,7 +21,7 @@ function App() {
 
                 {/* Staffflow */}
                 <Route path="/:staff_id/staffdashboard" element={<StaffDashboard />} />
-                <Route path="/:staff_id/staffviewproject" element={<StaffViewProject />} />
+                <Route path="/:staff_id/staffviewproject/:product_id" element={<StaffViewProject />} />
                 <Route path="/:staff_id/formpage" element={<FormPage />} />
             </Routes>
         </Router>
