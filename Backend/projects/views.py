@@ -24,57 +24,60 @@ def sanitize_field(field_value, default="NA"):
 
 @api_view(['POST'])
 def save_project(request):
-    # Extract and sanitize teamNames array from the request
-    team_names = []
-    for i in range(4):  # Expecting 4 team members
-        team_name = request.data.get(f"teamNames[{i}]", None)
-        team_names.append(sanitize_field(team_name))
-
-    # Construct the project data
+    # Extract and sanitize general project fields
     project_data = {
-        "project_name": sanitize_field(request.data.get("title")),  # Matches "title"
-        "tagline": sanitize_field(request.data.get("tags")),  # Matches "description"
-        "college": sanitize_field(request.data.get("college")),  # NEW FIELD
-        "description": sanitize_field(request.data.get("problemStatement")),  # Matches "problemStatement"
-        "key_features": sanitize_field(request.data.get("keyFeatures")),  # Matches "keyFeatures"
-        "domain": sanitize_field(request.data.get("domain")),  # Matches "domain"
-        "tech_stack": sanitize_field(request.data.get("tags")),  # Matches "tags"
-        "github_url": sanitize_field(request.data.get("githubUrl")),  # Matches "githubUrl"
-        "demo_url": sanitize_field(request.data.get("youtubeUrl")),  # Matches "youtubeUrl"
-        "presentation_layer": sanitize_field(request.data.get("presentationLayer")),  # Matches "presentationLayer"
-        "application_layer": sanitize_field(request.data.get("applicationLayer")),  # Matches "applicationLayer"
-        "data_layer": sanitize_field(request.data.get("dataLayer")),  # Matches "dataLayer"
-        "methodology": sanitize_field(request.data.get("methodology")),  # Matches "methodology"
-        "tools": sanitize_field(request.data.get("tools")),  # Matches "tools"
-        "api": sanitize_field(request.data.get("api")),  # Matches "api"
-        "team_count": int(request.data.get("teamCount", 1)),  # Matches "teamCount"
-        "team_names": team_names,  # Matches sanitized team names
-        "associate_project_mentor": sanitize_field(request.data.get("associateProjectMentor")),  # Matches "associateProjectMentor"
-        "associate_tech_mentor": sanitize_field(request.data.get("associateTechMentor")),  # Matches "associateTechMentor"
-        "dt_mentor": sanitize_field(request.data.get("dtMentor")),  # Matches "dtMentor"
-        "product_id": random.randint(10000, 99999),  # Auto-generated
+        "title": sanitize_field(request.data.get("title")),
+        "description": sanitize_field(request.data.get("description")),
+        "college": sanitize_field(request.data.get("college")),
+        "problem_statement": sanitize_field(request.data.get("problemStatement")),
+        "key_features": sanitize_field(request.data.get("keyFeatures")),
+        "scope": sanitize_field(request.data.get("scope")),
+        "presentation_layer": sanitize_field(request.data.get("presentationLayer")),
+        "application_layer": sanitize_field(request.data.get("applicationLayer")),
+        "data_layer": sanitize_field(request.data.get("dataLayer")),
+        "methodology": sanitize_field(request.data.get("methodology")),
+        "tools": sanitize_field(request.data.get("tools")),
+        "api": sanitize_field(request.data.get("api")),
+        "team_count": int(request.data.get("teamCount", 0)),
+        "associate_project_mentor": sanitize_field(request.data.get("associateProjectMentor")),
+        "associate_tech_mentor": sanitize_field(request.data.get("associateTechMentor")),
+        "dt_mentor": sanitize_field(request.data.get("dtMentor")),
+        "tech_stack": sanitize_field(request.data.get("tags")),
+        "github_url": sanitize_field(request.data.get("githubUrl")),
+        "demo_url": sanitize_field(request.data.get("youtubeUrl")),
+        "product_id": random.randint(10000, 99999),
     }
 
-    # Handle file uploads
-    if request.FILES.get("image"):
-        image_file = request.FILES["image"]
-        project_data["image"] = {
-            "filename": image_file.name,
-            "content_type": image_file.content_type,
-            "data": image_file.read(),  # Store as binary
+    # Process team member details
+    team_members = []
+    for i in range(project_data["team_count"]):
+        member_data = {
+            "name": sanitize_field(request.data.get(f"teamMembers[{i}][name]")),
+            "image": (
+                request.FILES.get(f"teamMembers[{i}][image]").read()
+                if request.FILES.get(f"teamMembers[{i}][image]")
+                else None
+            ),
         }
-    else:
-        project_data["image"] = "NA"  # Default for missing images
+        team_members.append(member_data)
+    project_data["team_members"] = team_members
 
-    if request.FILES.get("ppt"):
-        ppt_file = request.FILES["ppt"]
-        project_data["ppt"] = {
-            "filename": ppt_file.name,
-            "content_type": ppt_file.content_type,
-            "data": ppt_file.read(),  # Store as binary
-        }
-    else:
-        project_data["ppt"] = "NA"  # Default for missing PPTs
+    # Process mentors' images
+    def get_mentor_image(field_name):
+        file = request.FILES.get(field_name)
+        return file.read() if file else None
+
+    project_data["associate_project_mentor_image"] = get_mentor_image("associateProjectMentorImage")
+    project_data["associate_tech_mentor_image"] = get_mentor_image("associateTechMentorImage")
+    project_data["dt_mentor_image"] = get_mentor_image("dtMentorImage")
+
+    # Handle project image
+    image_file = request.FILES.get("image")
+    project_data["image"] = image_file.read() if image_file else None
+
+    # Handle project PPT
+    ppt_file = request.FILES.get("ppt")
+    project_data["ppt"] = ppt_file.read() if ppt_file else None
 
     # Debugging log
     print("Final project data:", project_data)
