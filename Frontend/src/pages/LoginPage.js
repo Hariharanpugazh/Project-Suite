@@ -37,7 +37,7 @@ import React, { useState, useEffect } from "react";
         const handleLogin = async (e) => {
             e.preventDefault();
             setMessage("");
-
+    
             try {
                 const response = await fetch("http://127.0.0.1:8000/api/projects/login/", {
                     method: "POST",
@@ -46,11 +46,12 @@ import React, { useState, useEffect } from "react";
                     },
                     body: JSON.stringify({ email, password }),
                 });
-
+    
                 const data = await response.json();
                 if (response.ok) {
                     setMessage(data.message);
-                    setTimeout(() => navigate("/"), 2000);
+                    localStorage.setItem("staff_id", data.staff_id); // Store staff_id in local storage
+                    setTimeout(() => navigate(`/${data.staff_id}`), 2000); 
                 } else {
                     setMessage(data.error || "Login failed.");
                 }

@@ -40,19 +40,22 @@ def register_user(request):
         if existing_user:
             return Response({"error": "User already exists."}, status=400)
 
+        # Generate a new ObjectId for staff_id and convert it to string
+        staff_id = str(ObjectId())
+
         # Save user to the 'user_info' collection
         user_data = {
             "name": name,
             "email": email,
             "password": password,  # Note: Store hashed passwords in production
+            "staff_id": staff_id
         }
         db["user_info"].insert_one(user_data)
 
-        return Response({"message": "User registered successfully."}, status=201)
+        return Response({"message": "User registered successfully.", "staff_id": staff_id}, status=201)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-
 
 @api_view(['POST'])
 def login_user(request):
@@ -71,8 +74,8 @@ def login_user(request):
         if not user:
             return Response({"error": "Invalid email or password."}, status=401)
 
-        # Respond with success and user name
-        return Response({"message": f"Welcome, {user['name']}! Login successful."}, status=200)
+        # Respond with success, user name, and staff_id
+        return Response({"message": f"Welcome, {user['name']}! Login successful.", "staff_id": user['staff_id']}, status=200)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
@@ -94,13 +97,11 @@ def save_project(request):
         "tools": sanitize_field(request.data.get("tools")),
         "api": sanitize_field(request.data.get("api")),
         "team_count": int(request.data.get("teamCount", 0)),
-        "associate_project_mentor": sanitize_field(request.data.get("associateProjectMentor")),
-        "associate_tech_mentor": sanitize_field(request.data.get("associateTechMentor")),
-        "dt_mentor": sanitize_field(request.data.get("dtMentor")),
-        "tech_stack": sanitize_field(request.data.get("tags")),
         "github_url": sanitize_field(request.data.get("githubUrl")),
         "demo_url": sanitize_field(request.data.get("youtubeUrl")),
-        "ppt_url": sanitize_field(request.data.get("ppt")),  # Save the PPT as a URL
+        "ppt_url": sanitize_field(request.data.get("ppt")),
+        "tags": request.data.getlist("tags[]"),  # Correctly fetch tags as a list
+        "domains": request.data.getlist("domains[]"),
         "product_id": random.randint(10000, 99999),
     }
 
@@ -118,21 +119,38 @@ def save_project(request):
         team_members.append(member_data)
     project_data["team_members"] = team_members
 
-    # Process mentors' images
-    def get_mentor_image(field_name):
-        file = request.FILES.get(field_name)
-        return file.read() if file else None
-
-    project_data["associate_project_mentor_image"] = get_mentor_image("associateProjectMentorImage")
-    project_data["associate_tech_mentor_image"] = get_mentor_image("associateTechMentorImage")
-    project_data["dt_mentor_image"] = get_mentor_image("dtMentorImage")
+    # Process mentors' details
+    mentors = {
+        "associate_project_mentor": {
+            "name": sanitize_field(request.data.get("associateProjectMentor")),
+            "image": (
+                request.FILES.get("associateProjectMentorImage").read()
+                if request.FILES.get("associateProjectMentorImage")
+                else None
+            ),
+        },
+        "associate_tech_mentor": {
+            "name": sanitize_field(request.data.get("associateTechMentor")),
+            "image": (
+                request.FILES.get("associateTechMentorImage").read()
+                if request.FILES.get("associateTechMentorImage")
+                else None
+            ),
+        },
+        "dt_mentor": {
+            "name": sanitize_field(request.data.get("dtMentor")),
+            "image": (
+                request.FILES.get("dtMentorImage").read()
+                if request.FILES.get("dtMentorImage")
+                else None
+            ),
+        },
+    }
+    project_data["mentors"] = mentors
 
     # Handle project image
     image_file = request.FILES.get("image")
     project_data["image"] = image_file.read() if image_file else None
-
-    # Debugging log
-    print("Final project data:", project_data)
 
     # Save to MongoDB
     collection.insert_one(project_data)
@@ -141,7 +159,6 @@ def save_project(request):
         {"message": "Project saved successfully", "product_id": project_data["product_id"]},
         status=201
     )
-
 
 @api_view(['GET'])
 def get_projects(request):
@@ -152,27 +169,66 @@ def get_projects(request):
         for project in projects:
             try:
                 project_data = {
-                    "project_name": project.get("project_name", ""),
-                    "tagline": project.get("tagline", ""),
+                    "title": project.get("title", ""),
                     "description": project.get("description", ""),
+                    "college": project.get("college", ""),
+                    "problem_statement": project.get("problem_statement", ""),
                     "key_features": project.get("key_features", ""),
-                    "domain": project.get("domain", ""),
-                    "tech_stack": project.get("tech_stack", ""),
+                    "scope": project.get("scope", ""),
+                    "presentation_layer": project.get("presentation_layer", ""),
+                    "application_layer": project.get("application_layer", ""),
+                    "data_layer": project.get("data_layer", ""),
+                    "methodology": project.get("methodology", ""),
+                    "tools": project.get("tools", ""),
+                    "api": project.get("api", ""),
+                    "team_count": project.get("team_count", 0),
                     "github_url": project.get("github_url", ""),
                     "demo_url": project.get("demo_url", ""),
-                    "college": project.get("college", ""),  # Add this field
+                    "ppt_url": project.get("ppt_url", ""),
+                    "tags": project.get("tags", []),
+                    "domains": project.get("domains", []),
                     "product_id": project.get("product_id", ""),
+                    "team_members": [],
+                    "mentors": {
+                        "associate_project_mentor": {},
+                        "associate_tech_mentor": {},
+                        "dt_mentor": {},
+                    },
                 }
 
-                if "image" in project and "data" in project["image"]:
-                    project_data["image"] = {
-                        "filename": project["image"].get("filename"),
-                        "content_type": project["image"].get("content_type"),
-                        "data": base64.b64encode(project["image"]["data"]).decode("utf-8"),
-                    }
+                # Process team members
+                if "team_members" in project:
+                    for member in project["team_members"]:
+                        project_data["team_members"].append({
+                            "name": member.get("name", ""),
+                            "image": {
+                                "content_type": "image/png",  # Ensure content type is included
+                                "data": base64.b64encode(member["image"]).decode("utf-8")
+                                if member.get("image")
+                                else None,
+                            },
+                        })
 
-                if "ppt" in project:
-                    project_data["ppt"] = {"filename": project["ppt"].get("filename")}
+                # Process mentors
+                mentors = project.get("mentors", {})
+                for key, mentor in mentors.items():
+                    if mentor:
+                        project_data["mentors"][key] = {
+                            "name": mentor.get("name", ""),
+                            "image": {
+                                "content_type": "image/png",  # Ensure content type is included
+                                "data": base64.b64encode(mentor["image"]).decode("utf-8")
+                                if mentor.get("image")
+                                else None,
+                            },
+                        }
+
+                # Process project image
+                if "image" in project and project["image"]:
+                    project_data["image"] = {
+                        "content_type": "image/png",  # Ensure content type is included
+                        "data": base64.b64encode(project["image"]).decode("utf-8"),
+                    }
 
                 project_list.append(project_data)
 
@@ -185,6 +241,7 @@ def get_projects(request):
     except Exception as e:
         print(f"Error fetching projects: {str(e)}")
         return Response({"error": "Could not fetch projects"}, status=500)
+
     
 # Helper function to serialize MongoDB documents
 def serialize_mongo_document(document):
