@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FaGithub, FaYoutube, FaEdit, FaSave, FaTimes } from "react-icons/fa";
+import { FaGithub, FaYoutube, FaEdit, FaSave, FaTimes, FaTag, FaLayerGroup, FaGoogleDrive } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-const ProjectDetailPage = () => {
+const StaffViewPage = () => {
   const { staff_id, product_id } = useParams();
   const [project, setProject] = useState(null);
   const [error, setError] = useState(null);
@@ -88,41 +88,78 @@ const ProjectDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 px-10 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 px-10 shadow-lg rounded-b-3xl">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6 }}
           className="container mx-auto flex justify-between items-center"
         >
-          <h1 className="text-3xl font-bold">SNS Project Suite</h1>
-          <p className="italic text-lg">Innovation for the Future</p>
+          <h1 className="text-4xl font-extrabold drop-shadow-lg">SNS Project Suite</h1>
+          <p className="italic text-lg font-medium">Innovation for the Future</p>
         </motion.div>
       </header>
 
+      {/* Main Content */}
       <main className="container mx-auto py-10 px-4 md:px-10">
-        {/* General Details */}
+        {/* Project Details and Image */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="bg-white shadow-md rounded-lg p-6"
+          className="bg-white shadow-xl rounded-lg p-6 mb-6 hover:shadow-2xl transition-shadow duration-300 grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <h2 className="text-4xl font-bold mb-4">{project.title}</h2>
-          <p className="text-lg text-gray-700 mb-2">Description: {project.description}</p>
-          <p className="text-lg text-gray-700">Problem Statement: {project.problem_statement}</p>
+          <div>
+            {editMode ? (
+              <>
+                <input
+                  type="text"
+                  value={editedProject.title}
+                  onChange={(e) => handleInputChange(e, "title")}
+                  className="w-full p-2 border border-gray-300 rounded-md mb-4 text-4xl font-bold"
+                  placeholder="Project Title"
+                />
+                <textarea
+                  value={editedProject.description}
+                  onChange={(e) => handleInputChange(e, "description")}
+                  className="w-full p-2 border border-gray-300 rounded-md mb-2 text-lg"
+                  placeholder="Description"
+                />
+                <textarea
+                  value={editedProject.problem_statement}
+                  onChange={(e) => handleInputChange(e, "problem_statement")}
+                  className="w-full p-2 border border-gray-300 rounded-md text-lg"
+                  placeholder="Problem Statement"
+                />
+              </>
+            ) : (
+              <>
+                <h2 className="text-4xl font-bold mb-4 text-gray-800">{project.title}</h2>
+                <p className="text-lg text-gray-600 mb-2">Description: {project.description}</p>
+                <p className="text-lg text-gray-600">Problem Statement: {project.problem_statement}</p>
+              </>
+            )}
+          </div>
+          <div className="flex justify-center items-center">
+            <img
+              src={getImageSrc(project.image)}
+              alt="Product"
+              className="w-3/4 rounded-lg shadow-lg object-cover"
+            />
+          </div>
         </motion.div>
 
-        {/* Key Features, Scope, and Layers */}
+        {/* Key Features, Layers */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-2xl font-bold mb-4">Key Features</h3>
+          <div className="bg-white shadow-xl rounded-lg p-6 hover:shadow-2xl transition-shadow duration-300">
+            <h3 className="text-2xl font-bold mb-4 text-blue-800">Key Features</h3>
             {editMode ? (
               <textarea
                 value={editedProject.key_features || ""}
@@ -130,11 +167,13 @@ const ProjectDetailPage = () => {
                 className="w-full p-2 border border-gray-300 rounded-md"
               />
             ) : (
-              <p>{project.key_features || "No key features available"}</p>
+              <p className="text-gray-600">{project.key_features || "No key features available"}</p>
             )}
           </div>
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-2xl font-bold mb-4">Layers</h3>
+          <div className="bg-white shadow-xl rounded-lg p-6 hover:shadow-2xl transition-shadow duration-300">
+            <h3 className="text-2xl font-bold mb-4 text-blue-800 flex items-center">
+              <FaLayerGroup className="mr-2" /> Layers
+            </h3>
             {editMode ? (
               <>
                 <input
@@ -161,9 +200,9 @@ const ProjectDetailPage = () => {
               </>
             ) : (
               <>
-                <p>Presentation: {project.presentation_layer || "N/A"}</p>
-                <p>Application: {project.application_layer || "N/A"}</p>
-                <p>Data: {project.data_layer || "N/A"}</p>
+                <p className="text-gray-600">Presentation: {project.presentation_layer || "N/A"}</p>
+                <p className="text-gray-600">Application: {project.application_layer || "N/A"}</p>
+                <p className="text-gray-600">Data: {project.data_layer || "N/A"}</p>
               </>
             )}
           </div>
@@ -174,78 +213,60 @@ const ProjectDetailPage = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"
         >
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-2xl font-bold mb-4">Tags</h3>
+          <div className="bg-white shadow-xl rounded-lg p-6 hover:shadow-2xl transition-shadow duration-300">
+            <h3 className="text-2xl font-bold mb-4 text-blue-800 flex items-center">
+              <FaTag className="mr-2" /> Tags
+            </h3>
             {Array.isArray(project.tags) && project.tags.length > 0 ? (
               project.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-sm mr-2"
+                  className="bg-blue-200 text-blue-800 px-3 py-1 rounded-full text-sm mr-2"
                 >
                   {tag}
                 </span>
               ))
             ) : (
-              <p className="text-gray-700">No tags available.</p>
+              <p className="text-gray-600">No tags available.</p>
             )}
           </div>
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h3 className="text-2xl font-bold mb-4">Domains</h3>
+          <div className="bg-white shadow-xl rounded-lg p-6 hover:shadow-2xl transition-shadow duration-300">
+            <h3 className="text-2xl font-bold mb-4 text-blue-800">Domains</h3>
             {Array.isArray(project.domains) && project.domains.length > 0 ? (
               project.domains.map((domain, index) => (
                 <span
                   key={index}
-                  className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-sm mr-2"
+                  className="bg-green-200 text-green-800 px-3 py-1 rounded-full text-sm mr-2"
                 >
                   {domain}
                 </span>
               ))
             ) : (
-              <p className="text-gray-700">No domains available.</p>
+              <p className="text-gray-600">No domains available.</p>
             )}
           </div>
         </motion.div>
 
-        {/* Mentors and Team */}
+        {/* Mentors */}
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mt-6 bg-white shadow-md rounded-lg p-6"
+          className="bg-white shadow-xl rounded-lg p-6 mt-6 hover:shadow-2xl transition-shadow duration-300"
         >
-          <h3 className="text-2xl font-bold mb-4">Team & Mentors</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {editedProject.team_members.map((member, index) => (
-              <div key={index} className="flex items-center space-x-4">
-                <img
-                  src={getImageSrc(member.image)}
-                  alt={member.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                {editMode ? (
-                  <input
-                    type="text"
-                    value={member.name}
-                    onChange={(e) => handleTeamMemberChange(index, "name", e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    placeholder="Member Name"
-                  />
-                ) : (
-                  <p className="text-gray-700 font-medium">{member.name}</p>
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="mt-6">
-            <h4 className="text-xl font-semibold text-gray-800 mb-2">Mentors</h4>
+          <h3 className="text-2xl font-bold mb-4 text-blue-800">Mentors</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {Object.entries(editedProject.mentors).map(([key, mentor], index) => (
-              <div key={index} className="flex items-center space-x-4 mb-4">
+              <div
+                key={index}
+                className="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md"
+              >
                 <img
                   src={getImageSrc(mentor.image)}
                   alt={mentor.name}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-32 h-32 rounded-full object-cover mb-4"
                 />
                 {editMode ? (
                   <input
@@ -256,12 +277,50 @@ const ProjectDetailPage = () => {
                     placeholder="Mentor Name"
                   />
                 ) : (
-                  <p className="text-gray-700 font-medium">
-                    {key.replace(/_/g, " ").toUpperCase()}: {mentor.name}
-                  </p>
+                  <p className="text-gray-700 font-medium">{mentor.name}</p>
                 )}
+                <p className="text-sm text-gray-500">{key.replace(/_/g, " ")}</p>
               </div>
             ))}
+          </div>
+        </motion.div>
+
+        {/* Team Members */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="bg-white shadow-xl rounded-lg p-6 mt-6 hover:shadow-2xl transition-shadow duration-300"
+        >
+          <h3 className="text-2xl font-bold mb-4 text-blue-800">Team Members</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Array.isArray(editedProject.team_members) && editedProject.team_members.length > 0 ? (
+              editedProject.team_members.map((member, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md"
+                >
+                  <img
+                    src={getImageSrc(member.image)}
+                    alt={member.name}
+                    className="w-32 h-32 rounded-full object-cover mb-4"
+                  />
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={member.name}
+                      onChange={(e) => handleTeamMemberChange(index, "name", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                      placeholder="Member Name"
+                    />
+                  ) : (
+                    <p className="text-gray-700 font-medium">{member.name}</p>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-600">No team members available.</p>
+            )}
           </div>
         </motion.div>
 
@@ -270,13 +329,34 @@ const ProjectDetailPage = () => {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mt-6 bg-white shadow-md rounded-lg p-6"
+          className="bg-white shadow-xl rounded-lg p-6 mt-6 hover:shadow-2xl transition-shadow duration-300 text-center"
         >
-          <h3 className="text-2xl font-bold mb-4">Links</h3>
-          <div className="flex space-x-4">
-            <a href={project.github_url || "#"} className="text-blue-600 hover:underline">GitHub</a>
-            <a href={project.demo_url || "#"} className="text-blue-600 hover:underline">Live Demo</a>
-            <a href={project.ppt_url || "#"} className="text-blue-600 hover:underline">PPT</a>
+          <h3 className="text-3xl font-bold mb-6 text-blue-800">Links</h3>
+          <div className="flex justify-center space-x-10">
+            <a
+              href={project.github_url || "#"}
+              className="text-blue-600 hover:underline flex items-center text-xl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaGithub className="mr-4 text-3xl" /> GitHub
+            </a>
+            <a
+              href={project.demo_url || "#"}
+              className="text-blue-600 hover:underline flex items-center text-xl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaYoutube className="mr-4 text-3xl" /> Live Demo
+            </a>
+            <a
+              href={project.ppt_url || "#"}
+              className="text-blue-600 hover:underline flex items-center text-xl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <FaGoogleDrive className="mr-4 text-3xl" /> Drive
+            </a>
           </div>
         </motion.div>
 
@@ -311,4 +391,4 @@ const ProjectDetailPage = () => {
   );
 };
 
-export default ProjectDetailPage;
+export default StaffViewPage;
