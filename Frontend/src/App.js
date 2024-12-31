@@ -12,7 +12,7 @@ function App() {
         <Router>
             <Routes>
                 <Route path="/" element={<PreviewPage />} />
-                <Route path="/formpage" element={<FormPage />} />
+                <Route path="/:staff_id/formpage" element={<FormPage />} />
                 <Route path="/project/:product_id" element={<ProjectDetailPage />} />
                 <Route path="/loginpage" element={<LoginPage />} /> {/* New login route */}
                 <Route path="/register" element={<RegisterPage />} /> {/* New register route */}

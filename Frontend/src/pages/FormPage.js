@@ -676,7 +676,18 @@ export default function FormPage() {
 
     try {
       const formDataToSend = new FormData();
-
+  
+      // Retrieve staff_id from local storage
+      const staffId = localStorage.getItem('staff_id');
+      if (!staffId) {
+        toast.error("Staff ID not found. Please log in again.");
+        setIsLoading(false);
+        return;
+      }
+  
+      // Add staff_id to formDataToSend
+      formDataToSend.append("staff_id", staffId);
+      
       Object.entries(formData).forEach(([key, value]) => {
         if (value instanceof File) {
           formDataToSend.append(key, value);
@@ -702,8 +713,9 @@ export default function FormPage() {
 
       const result = await response.json();
       if (response.ok) {
+        const staffId = localStorage.getItem("staff_id");
         toast.success(`Project saved successfully! Product ID: ${result.product_id}`);
-        navigate("/dashboard");
+        navigate(`/${staffId}/staffdashboard`);
       } else {
         throw new Error("Failed to save project");
       }
