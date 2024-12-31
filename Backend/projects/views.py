@@ -146,34 +146,65 @@ def save_project(request):
 @api_view(['GET'])
 def get_projects(request):
     try:
+        # Fetch all projects from the MongoDB collection
         projects = collection.find()
         project_list = []
 
         for project in projects:
             try:
+                # Construct project data response
                 project_data = {
-                    "project_name": project.get("project_name", ""),
-                    "tagline": project.get("tagline", ""),
+                    "title": project.get("title", ""),
                     "description": project.get("description", ""),
-                    "key_features": project.get("key_features", ""),
-                    "domain": project.get("domain", ""),
-                    "tech_stack": project.get("tech_stack", ""),
-                    "github_url": project.get("github_url", ""),
-                    "demo_url": project.get("demo_url", ""),
-                    "college": project.get("college", ""),  # Add this field
+                    "college": project.get("college", ""),
+                    "problemStatement": project.get("problem_statement", ""),
+                    "keyFeatures": project.get("key_features", ""),
+                    "scope": project.get("scope", ""),
+                    "presentationLayer": project.get("presentation_layer", ""),
+                    "applicationLayer": project.get("application_layer", ""),
+                    "dataLayer": project.get("data_layer", ""),
+                    "methodology": project.get("methodology", ""),
+                    "tools": project.get("tools", ""),
+                    "api": project.get("api", ""),
+                    "teamCount": project.get("team_count", 0),
+                    "associateProjectMentor": project.get("associate_project_mentor", ""),
+                    "associateTechMentor": project.get("associate_tech_mentor", ""),
+                    "dtMentor": project.get("dt_mentor", ""),
+                    "tags": project.get("tech_stack", ""),
+                    "githubUrl": project.get("github_url", ""),
+                    "youtubeUrl": project.get("demo_url", ""),
+                    "pptUrl": project.get("ppt_url", ""),
                     "product_id": project.get("product_id", ""),
                 }
 
-                if "image" in project and "data" in project["image"]:
+                # Decode and include binary image data, if present
+                if project.get("image"):
                     project_data["image"] = {
-                        "filename": project["image"].get("filename"),
-                        "content_type": project["image"].get("content_type"),
-                        "data": base64.b64encode(project["image"]["data"]).decode("utf-8"),
+                        "filename": project.get("image", {}).get("filename", ""),
+                        "content_type": project.get("image", {}).get("content_type", ""),
+                        "data": base64.b64encode(project.get("image", {}).get("data", b"")).decode("utf-8"),
                     }
 
-                if "ppt" in project:
-                    project_data["ppt"] = {"filename": project["ppt"].get("filename")}
+                # Include team members' details
+                team_members = project.get("team_members", [])
+                project_data["teamMembers"] = [
+                    {
+                        "name": member.get("name", ""),
+                        "image": base64.b64encode(member.get("image", b"")).decode("utf-8") if member.get("image") else None,
+                    }
+                    for member in team_members
+                ]
 
+                # Include mentor images, if present
+                for mentor_key, field_name in [
+                    ("associate_project_mentor_image", "associateProjectMentorImage"),
+                    ("associate_tech_mentor_image", "associateTechMentorImage"),
+                    ("dt_mentor_image", "dtMentorImage"),
+                ]:
+                    if project.get(mentor_key):
+                        project_data[field_name] = base64.b64encode(project[mentor_key]).decode("utf-8")
+
+                # Append the constructed project data to the list
                 project_list.append(project_data)
 
             except Exception as e:
