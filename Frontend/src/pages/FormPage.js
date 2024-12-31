@@ -45,20 +45,34 @@ export default function FormPage() {
     youtubeUrl: "",
     githubUrl: "",
     ppt: "",
+    tags: [],
+    domains: []
   });
 
   const handleTagAdd = (tag) => {
-    if (selectedTags.length < 4 && !selectedTags.includes(tag)) {
-      setSelectedTags([...selectedTags, tag]);
+    if (formData.tags.length < 4 && !formData.tags.includes(tag)) {
+      setFormData(prevData => ({
+        ...prevData,
+        tags: [...prevData.tags, tag]
+      }));
     }
   };
 
   const handleDomainSelect = (domain) => {
-    if (selectedDomains.includes(domain)) {
-      setSelectedDomains(selectedDomains.filter(d => d !== domain));
-    } else if (selectedDomains.length < 2) {
-      setSelectedDomains([...selectedDomains, domain]);
-    }
+    setFormData(prevData => {
+      if (prevData.domains.includes(domain)) {
+        return {
+          ...prevData,
+          domains: prevData.domains.filter(d => d !== domain)
+        };
+      } else if (prevData.domains.length < 2) {
+        return {
+          ...prevData,
+          domains: [...prevData.domains, domain]
+        };
+      }
+      return prevData;
+    });
   };
 
   const validateSection = (section) => {
@@ -73,7 +87,7 @@ export default function FormPage() {
         }
         break;
       case 2:
-        if (!formData.problemStatement.trim() || !formData.keyFeatures.trim() || !formData.scope.trim() || selectedTags.length === 0 || selectedDomains.length === 0) {
+        if (!formData.problemStatement.trim() || !formData.keyFeatures.trim() || !formData.scope.trim() || formData.tags.length === 0 || formData.domains.length === 0) {
           isValid = false;
           errorMessage = "Please fill in all required fields in the Project Info section.";
         }
@@ -284,7 +298,7 @@ export default function FormPage() {
                 Tags <span className="text-red-500">*</span>
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
-                {selectedTags.map((tag) => (
+                {formData.tags.map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
@@ -292,7 +306,10 @@ export default function FormPage() {
                     {tag}
                     <button
                       type="button"
-                      onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                      onClick={() => setFormData(prevData => ({
+                        ...prevData,
+                        tags: prevData.tags.filter(t => t !== tag)
+                      }))}
                       className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-indigo-200"
                     >
                       ×
@@ -327,7 +344,7 @@ export default function FormPage() {
                     type="button"
                     onClick={() => handleDomainSelect(domain)}
                     className={`p-3 text-sm rounded-lg border transition-all duration-200 ${
-                      selectedDomains.includes(domain)
+                      formData.domains.includes(domain)
                         ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                         : 'border-gray-300 hover:border-indigo-300'
                     }`}
@@ -644,7 +661,7 @@ export default function FormPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate all sections before submission
     for (let i = 1; i <= 5; i++) {
       const { isValid, errorMessage } = validateSection(i);
@@ -670,7 +687,7 @@ export default function FormPage() {
                 formDataToSend.append(`${key}[${index}][${subKey}]`, subValue || "");
               });
             } else {
-              formDataToSend.append(`${key}[${index}]`, item || "");
+              formDataToSend.append(`${key}[]`, item || "");
             }
           });
         } else {
@@ -706,7 +723,7 @@ export default function FormPage() {
             {renderProgress()}
             <form onSubmit={handleSubmit} className="space-y-8">
               {renderCurrentSection()}
-              
+
               <div className="flex justify-between pt-6">
                 <button
                   type="button"
@@ -716,7 +733,7 @@ export default function FormPage() {
                 >
                   Previous
                 </button>
-                
+
                 {currentSection < 5 ? (
                   <button
                     type="button"
