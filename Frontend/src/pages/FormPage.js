@@ -1,543 +1,756 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const FormPage = () => {
-    const [currentSection, setCurrentSection] = useState(1);
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        college: "SNSCE",
-        problemStatement: "",
-        keyFeatures: "",
-        scope: "",
-        domain: "",
-        tags: "",
-        presentationLayer: "",
-        applicationLayer: "",
-        dataLayer: "",
-        methodology: "",
-        tools: "",
-        api: "",
-        teamCount: 1,
-        teamNames: ["", "", "", ""],
-        associateProjectMentor: "",
-        associateTechMentor: "",
-        dtMentor: "",
-        image: null,
-        youtubeUrl: "",
-        githubUrl: "",
-        ppt: null,
-    });
+export default function FormPage() {
+  const navigate = useNavigate();
+  const [currentSection, setCurrentSection] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedDomains, setSelectedDomains] = useState([]);
 
-    const [isLoading, setIsLoading] = useState(false); // Loading state
-    const navigate = useNavigate();
+  const domains = [
+    "Robotics & Automation",
+    "Metaverse Gaming & Digital Twins",
+    "Data Science / AI / ML",
+    "Internet of Things",
+    "Communication and Growth Tec",
+    "Additive Manufacturing (3D Printing)",
+    "Low Code Development"
+  ];
 
-    const handleChange = (e) => {
-        const { name, value, files } = e.target;
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    college: "",
+    problemStatement: "",
+    keyFeatures: "",
+    scope: "",
+    presentationLayer: "",
+    applicationLayer: "",
+    dataLayer: "",
+    methodology: "",
+    tools: "",
+    api: "",
+    teamCount: 1,
+    teamMembers: [{ name: "", image: null }],
+    associateProjectMentor: "",
+    associateProjectMentorImage: null,
+    associateTechMentor: "",
+    associateTechMentorImage: null,
+    dtMentor: "",
+    dtMentorImage: null,
+    image: null,
+    youtubeUrl: "",
+    githubUrl: "",
+    ppt: "",
+  });
 
-        // Handle file inputs
-        if (files) {
-            if (
-                name === "image" &&
-                files[0]?.type.startsWith("image/")
-            ) {
-                setFormData({ ...formData, [name]: files[0] });
-            } else if (
-                name === "ppt" &&
-                (files[0]?.type ===
-                    "application/vnd.ms-powerpoint" ||
-                    files[0]?.type ===
-                        "application/vnd.openxmlformats-officedocument.presentationml.presentation")
-            ) {
-                setFormData({ ...formData, [name]: files[0] });
-            } else {
-                alert("Invalid file format. Please upload a valid file.");
-            }
-        } else {
-            // Handle text inputs
-            setFormData({ ...formData, [name]: value });
+  const handleTagAdd = (tag) => {
+    if (selectedTags.length < 4 && !selectedTags.includes(tag)) {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const handleDomainSelect = (domain) => {
+    if (selectedDomains.includes(domain)) {
+      setSelectedDomains(selectedDomains.filter(d => d !== domain));
+    } else if (selectedDomains.length < 2) {
+      setSelectedDomains([...selectedDomains, domain]);
+    }
+  };
+
+  const validateSection = (section) => {
+    let isValid = true;
+    let errorMessage = "";
+
+    switch (section) {
+      case 1:
+        if (!formData.title.trim() || !formData.description.trim() || !formData.college) {
+          isValid = false;
+          errorMessage = "Please fill in all required fields in the Form section.";
         }
-    };
-
-    const handleTeamNameChange = (index, value) => {
-        const updatedTeamNames = [...formData.teamNames];
-        updatedTeamNames[index] = value || "NA"; // Default to "NA" if value is empty
-        setFormData({ ...formData, teamNames: updatedTeamNames });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true); // Show loading indicator
-
-        const formDataToSend = new FormData();
-
-        // Convert form data to FormData object
-        Object.keys(formData).forEach((key) => {
-            if (Array.isArray(formData[key])) {
-                // Handle array fields like teamNames
-                formData[key].forEach((value, index) => {
-                    formDataToSend.append(`${key}[${index}]`, value || "NA");
-                });
-            } else if (formData[key] instanceof File) {
-                // Handle file fields
-                formDataToSend.append(key, formData[key]);
-            } else {
-                // Handle other fields
-                formDataToSend.append(key, formData[key] || "");
-            }
-        });
-
-        try {
-            const response = await fetch(
-                "http://127.0.0.1:8000/api/projects/save-project/",
-                {
-                    method: "POST",
-                    body: formDataToSend,
-                }
-            );
-
-            const result = await response.json();
-            if (response.ok) {
-                alert(
-                    `Project saved successfully! Product ID: ${result.product_id}`
-                );
-                navigate("/"); // Redirect to localhost:3000
-            } else {
-                console.error(result);
-                alert("Error saving project. Please check the console for details.");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("An error occurred. Please try again.");
-        } finally {
-            setIsLoading(false); // Hide loading indicator
+        break;
+      case 2:
+        if (!formData.problemStatement.trim() || !formData.keyFeatures.trim() || !formData.scope.trim() || selectedTags.length === 0 || selectedDomains.length === 0) {
+          isValid = false;
+          errorMessage = "Please fill in all required fields in the Project Info section.";
         }
-    };
+        break;
+      case 3:
+        if (!formData.presentationLayer.trim() || !formData.applicationLayer.trim() || !formData.dataLayer.trim() || !formData.methodology.trim() || !formData.tools.trim()) {
+          isValid = false;
+          errorMessage = "Please fill in all required fields in the Tech Stack section.";
+        }
+        break;
+      case 4:
+        const allTeamMembersValid = formData.teamMembers.every(member => member.name.trim() && member.image);
+        if (!allTeamMembersValid || !formData.associateProjectMentor.trim() || !formData.associateProjectMentorImage || !formData.associateTechMentor.trim() || !formData.associateTechMentorImage || !formData.dtMentor.trim() || !formData.dtMentorImage) {
+          isValid = false;
+          errorMessage = "Please fill in all required fields in the Team Info section.";
+        }
+        break;
+      case 5:
+        if (!formData.image || !formData.youtubeUrl.trim() || !formData.githubUrl.trim() || !formData.ppt.trim()) {
+          isValid = false;
+          errorMessage = "Please fill in all required fields in the Uploads section.";
+        }
+        break;
+      default:
+        break;
+    }
 
-    const renderCurrentFields = () => {
-        const validateField = (field, errorMessage) => {
-            if (!formData[field] || formData[field].toString().trim() === "") {
-                const errorElement = document.getElementById(`${field}-error`);
-                if (errorElement) {
-                    errorElement.textContent = errorMessage;
-                    errorElement.style.display = "block";
-                }
-                return false;
-            }
-            const errorElement = document.getElementById(`${field}-error`);
-            if (errorElement) {
-                errorElement.style.display = "none";
-            }
-            return true;
-        };
-    
-        switch (currentSection) {
-            case 1:
-                return (
-                    <>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Title</label>
-                            <input
-                                type="text"
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("title", "Title is required.")}
-                                required
-                            />
-                            <p id="title-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Description</label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                rows="4"
-                                onBlur={() => validateField("description", "Description is required.")}
-                                required
-                            />
-                            <p id="description-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">College</label>
-                            <select
-                                name="college"
-                                value={formData.college}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("college", "Please select a college.")}
-                                required
-                            >
-                                <option value="SNSCE">SNSCE</option>
-                                <option value="SNSCT">SNSCT</option>
-                                <option value="SNSRCAS">SNSRCAS</option>
-                            </select>
-                            <p id="college-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                    </>
-                );
-            case 2:
-                return (
-                    <>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Problem Statement</label>
-                            <textarea
-                                name="problemStatement"
-                                value={formData.problemStatement}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                rows="3"
-                                onBlur={() => validateField("problemStatement", "Problem Statement is required.")}
-                                required
-                            />
-                            <p id="problemStatement-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Key Features</label>
-                            <textarea
-                                name="keyFeatures"
-                                value={formData.keyFeatures}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                rows="3"
-                                onBlur={() => validateField("keyFeatures", "Key Features are required.")}
-                                required
-                            />
-                            <p id="keyFeatures-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Scope</label>
-                            <textarea
-                                name="scope"
-                                value={formData.scope}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                rows="3"
-                                onBlur={() => validateField("scope", "Scope is required.")}
-                                required
-                            />
-                            <p id="scope-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Domain</label>
-                            <input
-                                type="text"
-                                name="domain"
-                                value={formData.domain}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("domain", "Domain is required.")}
-                                required
-                            />
-                            <p id="domain-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Tags</label>
-                            <input
-                                type="text"
-                                name="tags"
-                                value={formData.tags}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("tags", "Tags are required.")}
-                                required
-                            />
-                            <p id="tags-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                    </>
-                );
-            case 3:
-                return (
-                    <>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Presentation Layer</label>
-                            <input
-                                type="text"
-                                name="presentationLayer"
-                                value={formData.presentationLayer}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("presentationLayer", "Presentation Layer is required.")}
-                                required
-                            />
-                            <p id="presentationLayer-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Application Layer</label>
-                            <input
-                                type="text"
-                                name="applicationLayer"
-                                value={formData.applicationLayer}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("applicationLayer", "Application Layer is required.")}
-                                required
-                            />
-                            <p id="applicationLayer-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Data Layer</label>
-                            <input
-                                type="text"
-                                name="dataLayer"
-                                value={formData.dataLayer}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("dataLayer", "Data Layer is required.")}
-                                required
-                            />
-                            <p id="dataLayer-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Methodology</label>
-                            <input
-                                type="text"
-                                name="methodology"
-                                value={formData.methodology}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("methodology", "Methodology is required.")}
-                                required
-                            />
-                            <p id="methodology-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Tools</label>
-                            <input
-                                type="text"
-                                name="tools"
-                                value={formData.tools}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("tools", "Tools are required.")}
-                                required
-                            />
-                            <p id="tools-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">API</label>
-                            <input
-                                type="text"
-                                name="api"
-                                value={formData.api}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("api", "API is required.")}
-                                required
-                            />
-                            <p id="api-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                    </>
-                );
-                case 4:
+    return { isValid, errorMessage };
+  };
+
+  const handleNextSection = () => {
+    const { isValid, errorMessage } = validateSection(currentSection);
+    if (isValid) {
+      setCurrentSection(prev => prev + 1);
+    } else {
+      toast.warning(errorMessage, {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({ ...prevData, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (files && files[0]) {
+      setFormData(prevData => ({ ...prevData, [name]: files[0] }));
+    }
+  };
+
+  const handleTeamMemberChange = (index, field, value) => {
+    const newTeamMembers = [...formData.teamMembers];
+    newTeamMembers[index] = { ...newTeamMembers[index], [field]: value };
+    setFormData(prevData => ({ ...prevData, teamMembers: newTeamMembers }));
+  };
+
+  const renderProgress = () => {
+    const progress = (currentSection / 5) * 100;
     return (
-        <>
-            <div className="grid grid-cols-2 gap-4">
-                {[0, 1, 2, 3].map((index) => (
-                    <div key={index} className="mb-4">
-                        <label className="block text-gray-700 font-bold mb-2">
-                            Teammate {index + 1} Name
-                        </label>
-                        <input
-                            type="text"
-                            name={`teamNames[${index}]`}
-                            value={formData.teamNames[index] || ""}
-                            onChange={(e) => handleTeamNameChange(index, e.target.value)}
-                            className="w-full px-3 py-2 border rounded-md"
-                            onBlur={() => {
-                                // If empty, set default value as "NA"
-                                if (
-                                    !formData.teamNames[index] ||
-                                    formData.teamNames[index].trim() === ""
-                                ) {
-                                    handleTeamNameChange(index, "NA");
-                                }
-                            }}
-                            required
-                        />
-                        <p
-                            id={`teamNames[${index}]-error`}
-                            className="text-red-500 text-sm hidden"
-                        ></p>
-                    </div>
-                ))}
+      <div className="w-full mb-8">
+        <div className="relative pt-1">
+          <div className="flex mb-2 items-center justify-between">
+            <div className="flex-1">
+              <div className="relative h-2 overflow-hidden rounded-full bg-gray-200">
+                <div
+                  style={{ width: `${progress}%` }}
+                  className="absolute h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-300 ease-in-out"
+                ></div>
+              </div>
             </div>
-            <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">
-                    Associate Project Mentor
-                </label>
-                <input
-                    type="text"
-                    name="associateProjectMentor"
-                    value={formData.associateProjectMentor}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    onBlur={() =>
-                        validateField(
-                            "associateProjectMentor",
-                            "Associate Project Mentor is required."
-                        )
-                    }
-                    required
-                />
-                <p
-                    id="associateProjectMentor-error"
-                    className="text-red-500 text-sm hidden"
-                ></p>
-            </div>
-            <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">
-                    Associate Technology Mentor
-                </label>
-                <input
-                    type="text"
-                    name="associateTechMentor"
-                    value={formData.associateTechMentor}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    onBlur={() =>
-                        validateField(
-                            "associateTechMentor",
-                            "Associate Technology Mentor is required."
-                        )
-                    }
-                    required
-                />
-                <p
-                    id="associateTechMentor-error"
-                    className="text-red-500 text-sm hidden"
-                ></p>
-            </div>
-            <div className="mb-4">
-                <label className="block text-gray-700 font-bold mb-2">
-                    DT Mentor
-                </label>
-                <input
-                    type="text"
-                    name="dtMentor"
-                    value={formData.dtMentor}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md"
-                    onBlur={() =>
-                        validateField("dtMentor", "DT Mentor is required.")
-                    }
-                    required
-                />
-                <p id="dtMentor-error" className="text-red-500 text-sm hidden"></p>
-            </div>
-        </>
-    );
-                
-            case 5:
-                return (
-                    <>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">Image Upload</label>
-                            <input
-                                type="file"
-                                name="image"
-                                onChange={handleChange}
-                                className="w-full"
-                                accept="image/*"
-                                onBlur={() => validateField("image", "Please upload a valid image file.")}
-                                required
-                            />
-                            <p id="image-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">YouTube URL</label>
-                            <input
-                                type="url"
-                                name="youtubeUrl"
-                                value={formData.youtubeUrl}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("youtubeUrl", "YouTube URL is required.")}
-                                required
-                            />
-                            <p id="youtubeUrl-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">GitHub URL</label>
-                            <input
-                                type="url"
-                                name="githubUrl"
-                                value={formData.githubUrl}
-                                onChange={handleChange}
-                                className="w-full px-3 py-2 border rounded-md"
-                                onBlur={() => validateField("githubUrl", "GitHub URL is required.")}
-                                required
-                            />
-                            <p id="githubUrl-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 font-bold mb-2">PPT Upload</label>
-                            <input
-                                type="file"
-                                name="ppt"
-                                onChange={handleChange}
-                                className="w-full"
-                                accept=".ppt,.pptx"
-                                onBlur={() => validateField("ppt", "Please upload a valid PPT file.")}
-                                required
-                            />
-                            <p id="ppt-error" className="text-red-500 text-sm hidden"></p>
-                        </div>
-                    </>
-                );
-            default:
-                return null;
-        }
-    };
-    
-    
-
-    return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
-            <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
-                {isLoading && (
-                    <div className="flex justify-center items-center mb-4">
-                        <div className="loader border-t-4 border-blue-500 w-8 h-8 rounded-full animate-spin"></div>
-                        <p className="ml-2 text-blue-500">Submitting...</p>
-                    </div>
-                )}
-                <form onSubmit={handleSubmit}>
-                    {renderCurrentFields()}
-                    <div className="flex justify-between mt-6">
-                        {currentSection > 1 && (
-                            <button
-                                type="button"
-                                className="bg-gray-500 text-white px-4 py-2 rounded"
-                                onClick={() => setCurrentSection((prev) => prev - 1)}
-                            >
-                                Previous
-                            </button>
-                        )}
-                        {currentSection < 5 ? (
-                            <button
-                                type="button"
-                                className="bg-blue-500 text-white px-4 py-2 rounded"
-                                onClick={() => setCurrentSection((prev) => prev + 1)}
-                            >
-                                Next
-                            </button>
-                        ) : (
-                            <button
-                                type="submit"
-                                className="bg-green-500 text-white px-4 py-2 rounded"
-                                disabled={isLoading} // Disable button while loading
-                            >
-                                Submit
-                            </button>
-                        )}
-                    </div>
-                </form>
-            </div>
+          </div>
+          <div className="flex justify-between text-xs font-medium uppercase tracking-wider text-gray-600">
+            <div className={`${currentSection >= 1 ? 'text-indigo-600' : ''}`}>Form</div>
+            <div className={`${currentSection >= 2 ? 'text-indigo-600' : ''}`}>Project Info</div>
+            <div className={`${currentSection >= 3 ? 'text-indigo-600' : ''}`}>Tech Stack</div>
+            <div className={`${currentSection >= 4 ? 'text-indigo-600' : ''}`}>Team Info</div>
+            <div className={`${currentSection >= 5 ? 'text-indigo-600' : ''}`}>Uploads</div>
+          </div>
         </div>
+      </div>
     );
-};
+  };
 
-export default FormPage;
+  const renderCurrentSection = () => {
+    switch (currentSection) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="title"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="Enter project title (max 50 characters)"
+              />
+              <p className="text-xs text-gray-500">{formData.title.length}/50 characters</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                rows="4"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="Enter project description"
+              />
+              <p className="text-xs text-gray-500">{formData.description.length}/500 characters</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                College <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="college"
+                value={formData.college}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              >
+                <option value="">Select your college</option>
+                <option value="SNSCE">SNSCE</option>
+                <option value="SNSCT">SNSCT</option>
+                <option value="SNSRCAS">SNSRCAS</option>
+                <option value="Dr. SNSCE">Dr. SNSCE</option>
+                <option value="SNSBSPINE">SNSBSPINE</option>
+                <option value="SNSCPHS">SNSCPHS</option>
+                <option value="SNSCAHS">SNSCAHS</option>
+                <option value="SNSCNURSING">SNSCNURSING</option>
+                <option value="SNSCPHYSIO">SNSCPHYSIO</option>
+                <option value="SNS ACADEMY">SNS ACADEMY</option>
+              </select>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Problem Statement <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="problemStatement"
+                value={formData.problemStatement}
+                onChange={handleChange}
+                required
+                rows="4"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="Describe the problem your project addresses"
+              />
+              <p className="text-xs text-gray-500">{formData.problemStatement.length}/500 characters</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Key Features <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="keyFeatures"
+                value={formData.keyFeatures}
+                onChange={handleChange}
+                required
+                rows="4"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="List the key features of your project"
+              />
+              <p className="text-xs text-gray-500">{formData.keyFeatures.length}/500 characters</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Scope <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="scope"
+                value={formData.scope}
+                onChange={handleChange}
+                required
+                rows="4"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="Define the scope of your project"
+              />
+              <p className="text-xs text-gray-500">{formData.scope.length}/500 characters</p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Tags <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                      className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-indigo-200"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <input
+                placeholder="Type a tag and press Enter"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const value = e.target.value.trim();
+                    if (value) {
+                      handleTagAdd(value);
+                      e.target.value = '';
+                    }
+                  }
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Domains <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {domains.map((domain) => (
+                  <button
+                    key={domain}
+                    type="button"
+                    onClick={() => handleDomainSelect(domain)}
+                    className={`p-3 text-sm rounded-lg border transition-all duration-200 ${
+                      selectedDomains.includes(domain)
+                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                        : 'border-gray-300 hover:border-indigo-300'
+                    }`}
+                  >
+                    {domain}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Presentation Layer <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="presentationLayer"
+                value={formData.presentationLayer}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="e.g., React, Vue.js, Angular"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Application Layer <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="applicationLayer"
+                value={formData.applicationLayer}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="e.g., Node.js, Django, Ruby on Rails"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Data Layer <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="dataLayer"
+                value={formData.dataLayer}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="e.g., MySQL, MongoDB, PostgreSQL"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Methodology <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="methodology"
+                value={formData.methodology}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="e.g., Agile, Scrum, Waterfall"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Tools <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="tools"
+                value={formData.tools}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="e.g., Git, JIRA, Docker"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                API <span className="text-gray-500 text-sm">(optional)</span>
+              </label>
+              <input
+                name="api"
+                value={formData.api}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="e.g., Gemini API"
+              />
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Team Members <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.teamCount}
+                onChange={(e) => {
+                  const count = parseInt(e.target.value);
+                  setFormData({
+                    ...formData,
+                    teamCount: count,
+                    teamMembers: Array(count).fill().map((_, i) => formData.teamMembers[i] || { name: "", image: null }),
+                  });
+                }}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+              >
+                {[1, 2, 3, 4, 5, 6].map((num) => (
+                  <option key={num} value={num}>
+                    {num} Member{num > 1 ? 's' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {formData.teamMembers.map((member, index) => (
+              <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Team Member {index + 1} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    value={member.name}
+                    onChange={(e) => handleTeamMemberChange(index, "name", e.target.value)}
+                    required
+                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                    placeholder={`Enter name of team member ${index + 1}`}
+                  />
+                  <div className="mt-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Image <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="file"
+                      onChange={(e) => handleTeamMemberChange(index, "image", e.target.files[0])}
+                      accept="image/*"
+                      required
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <div className="space-y-4 p-4 border border-gray-200 rounded-lg">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Associate Project Mentor <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="associateProjectMentor"
+                  value={formData.associateProjectMentor}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  placeholder="Enter name of associate project mentor"
+                />
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    name="associateProjectMentorImage"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    required
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-4 border border-gray-200 rounded-lg">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  Associate Technology Mentor <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="associateTechMentor"
+                  value={formData.associateTechMentor}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  placeholder="Enter name of associate technology mentor"
+                />
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    name="associateTechMentorImage"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    required
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-4 border border-gray-200 rounded-lg">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  DT Mentor <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="dtMentor"
+                  value={formData.dtMentor}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  placeholder="Enter name of DT mentor"
+                />
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Image <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="file"
+                    name="dtMentorImage"
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    required
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 5:
+        return (
+          <div className="space-y-6">
+            <div className="p-4 border border-gray-200 rounded-lg space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Project Image <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="image"
+                type="file"
+                onChange={handleFileChange}
+                accept="image/*"
+                required
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              />
+            </div>
+
+            <div className="p-4 border border-gray-200 rounded-lg space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                YouTube URL <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="youtubeUrl"
+                type="url"
+                value={formData.youtubeUrl}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="https://www.youtube.com/watch?v=..."
+              />
+            </div>
+
+            <div className="p-4 border border-gray-200 rounded-lg space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                GitHub URL <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="githubUrl"
+                type="url"
+                value={formData.githubUrl}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="https://github.com/username/repository"
+              />
+            </div>
+
+            <div className="p-4 border border-gray-200 rounded-lg space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                PPT Drive URL <span className="text-red-500">*</span>
+              </label>
+              <input
+                name="ppt"
+                type="url"
+                value={formData.ppt}
+                onChange={handleChange}
+                required
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                placeholder="https://drive.google.com/..."
+              />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate all sections before submission
+    for (let i = 1; i <= 5; i++) {
+      const { isValid, errorMessage } = validateSection(i);
+      if (!isValid) {
+        toast.error(errorMessage);
+        setCurrentSection(i);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+
+    try {
+      const formDataToSend = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value instanceof File) {
+          formDataToSend.append(key, value);
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (typeof item === 'object' && item !== null) {
+              Object.entries(item).forEach(([subKey, subValue]) => {
+                formDataToSend.append(`${key}[${index}][${subKey}]`, subValue || "");
+              });
+            } else {
+              formDataToSend.append(`${key}[${index}]`, item || "");
+            }
+          });
+        } else {
+          formDataToSend.append(key, value || "");
+        }
+      });
+
+      const response = await fetch("http://127.0.0.1:8000/api/projects/save-project/", {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        toast.success(`Project saved successfully! Product ID: ${result.product_id}`);
+        navigate("/dashboard");
+      } else {
+        throw new Error("Failed to save project");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+          <div className="px-6 py-8 sm:p-10">
+            {renderProgress()}
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {renderCurrentSection()}
+              
+              <div className="flex justify-between pt-6">
+                <button
+                  type="button"
+                  onClick={() => setCurrentSection(prev => prev - 1)}
+                  disabled={currentSection === 1 || isLoading}
+                  className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-full text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  Previous
+                </button>
+                
+                {currentSection < 5 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextSection}
+                    disabled={isLoading}
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Submitting
+                      </>
+                    ) : (
+                      'Submit'
+                    )}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <ToastContainer />
+    </div>
+  );
+}
