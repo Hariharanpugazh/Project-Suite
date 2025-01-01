@@ -9,6 +9,7 @@ const StaffViewPage = () => {
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [editedProject, setEditedProject] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -27,20 +28,31 @@ const StaffViewPage = () => {
   }, [product_id]);
 
   const handleSave = async () => {
+    setLoading(true); // Show loading animation
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/projects/${product_id}/`, {
+      const response = await fetch(`http://127.0.0.1:8000/api/projects/edit/${product_id}/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(editedProject),
       });
+  
+      if (!response.ok) {
+        throw new Error("Failed to save project");
+      }
+  
       const data = await response.json();
       setProject(data);
       setEditMode(false);
+  
+      setLoading(false); // Hide loading animation
+      // Refresh the page
+      window.location.reload();
     } catch (error) {
       console.error("Error saving project:", error);
       setError("An error occurred while saving the project.");
+      setLoading(false); // Hide loading animation
     }
   };
 
@@ -58,6 +70,9 @@ const StaffViewPage = () => {
   }
 
   const getImageSrc = (image) => {
+    if (!image) {
+      return "https://via.placeholder.com/150"; // Placeholder image for missing image
+    }
     return image.startsWith("data:") ? image : `data:image/jpeg;base64,${image}`;
   };
 
@@ -264,10 +279,10 @@ const StaffViewPage = () => {
                 className="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md"
               >
                 <img
-                  src={getImageSrc(mentor.image)}
-                  alt={mentor.name}
-                  className="w-32 h-32 rounded-full object-cover mb-4"
-                />
+  src={getImageSrc(mentor.image)}
+  alt={mentor.name || "Mentor"}
+  className="w-32 h-32 rounded-full object-cover mb-4"
+/>
                 {editMode ? (
                   <input
                     type="text"
@@ -301,10 +316,10 @@ const StaffViewPage = () => {
                   className="flex flex-col items-center bg-gray-100 p-4 rounded-lg shadow-md"
                 >
                   <img
-                    src={getImageSrc(member.image)}
-                    alt={member.name}
-                    className="w-32 h-32 rounded-full object-cover mb-4"
-                  />
+  src={getImageSrc(member.image)}
+  alt={member.name || "Team Member"}
+  className="w-32 h-32 rounded-full object-cover mb-4"
+/>
                   {editMode ? (
                     <input
                       type="text"
@@ -376,6 +391,11 @@ const StaffViewPage = () => {
               >
                 <FaSave className="mr-2" /> Save
               </button>
+              {loading && (
+    <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+      <div className="animate-spin rounded-full h-20 w-20 border-t-4 border-blue-500"></div>
+    </div>
+  )}
             </>
           ) : (
             <button
