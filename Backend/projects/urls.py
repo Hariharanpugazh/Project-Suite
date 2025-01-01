@@ -7,5 +7,5 @@ urlpatterns = [
     path('<int:product_id>/', get_project_details, name='get_project_details'),
     path('api/projects/get-projects-by-staff-id/', get_projects_by_staff_id, name='get_projects_by_staff_id'),
     path('register/', register_user, name='register_user'),  # New route for registration
-    path('login/', login_user, name='login_user'),           # New route for login
+    path('login/', login_user, name='login_user'),  # New route for login
 ]
