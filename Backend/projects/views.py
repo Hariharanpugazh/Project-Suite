@@ -8,6 +8,7 @@ import random
 import logging
 from bson.objectid import ObjectId
 import base64
+import json
 
 # Connect to MongoDB
 client = MongoClient(settings.MONGODB_URI)
@@ -370,3 +371,75 @@ def get_project_details(request, product_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Invalid HTTP method."}, status=405)
+    
+@csrf_exempt
+@api_view(['PUT'])
+def edit_project(request, product_id):
+    """
+    Edit project details without changing the existing images if not updated.
+    """
+    try:
+        # Parse the JSON body once
+        request_data = json.loads(request.body.decode('utf-8'))
+
+        # Fetch the existing project by product_id
+        print(f"Triggered edit_project for product_id: {product_id}")
+        project = collection.find_one({"product_id": int(product_id)})
+        if not project:
+            return JsonResponse({"error": "Project not found."}, status=404)
+
+        # Update non-image fields
+        updated_fields = {
+            "title": request_data.get("title", project.get("title")),
+            "description": request_data.get("description", project.get("description")),
+            "problem_statement": request_data.get("problem_statement", project.get("problem_statement")),
+            "key_features": request_data.get("key_features", project.get("key_features")),
+            "presentation_layer": request_data.get("presentation_layer", project.get("presentation_layer")),
+            "application_layer": request_data.get("application_layer", project.get("application_layer")),
+            "data_layer": request_data.get("data_layer", project.get("data_layer")),
+            "github_url": request_data.get("github_url", project.get("github_url")),
+            "demo_url": request_data.get("demo_url", project.get("demo_url")),
+            "ppt_url": request_data.get("ppt_url", project.get("ppt_url")),
+        }
+
+        # Retain existing image if no new image is uploaded
+        if not request.FILES.get("image"):
+            updated_fields["image"] = project.get("image")  # Retain existing image
+        else:
+            updated_fields["image"] = request.FILES["image"].read()  # Update with new image
+
+        # Process team members (if provided in request)
+        team_members = request_data.get("team_members", None)
+        if team_members:
+            updated_team_members = []
+            for i, member in enumerate(team_members):
+                existing_member = project.get("team_members", [])[i] if i < len(project.get("team_members", [])) else {}
+                updated_team_members.append({
+                    "name": member.get("name", existing_member.get("name")),
+                    "image": (
+                        request.FILES.get(f"team_members[{i}][image]").read()
+                        if request.FILES.get(f"team_members[{i}][image]")
+                        else existing_member.get("image")
+                    )
+                })
+            updated_fields["team_members"] = updated_team_members
+
+        # Process mentors (if provided in request)
+        mentors = request_data.get("mentors", None)
+        if mentors:
+            updated_mentors = project.get("mentors", {})
+            for key, mentor in mentors.items():
+                if "name" in mentor:
+                    updated_mentors[key]["name"] = mentor["name"]
+                if "image" in mentor and request.FILES.get(f"{key}_image"):
+                    updated_mentors[key]["image"] = request.FILES[f"{key}_image"].read()
+            updated_fields["mentors"] = updated_mentors
+
+        # Update project in MongoDB
+        collection.update_one({"product_id": int(product_id)}, {"$set": updated_fields})
+
+        return JsonResponse({"message": "Project updated successfully."}, status=200)
+
+    except Exception as e:
+        print(f"Error in edit_project: {e}")
+        return JsonResponse({"error": str(e)}, status=500)

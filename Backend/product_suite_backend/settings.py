@@ -103,7 +103,7 @@ DATABASES = {
 # MongoDB-specific settings
 MONGODB_URI = "mongodb+srv://ajaysihub:nrwULVWz8ysWBGK5@projects.dfhvc.mongodb.net/"
 MONGO_DB_NAME = "ProductSuite"
-
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

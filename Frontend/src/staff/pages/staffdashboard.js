@@ -21,7 +21,7 @@ const StaffDashboard = () => {
         // Ensure staff_id is passed to the API call
         const fetchProjectsByStaff = async (staffId) => {
             try {
-                const response = await fetch(`http://127.0.0.1:8000/api/projects/api/projects/get-projects-by-staff-id/?staff_id=${staffId}`);
+                const response = await fetch(`http://127.0.0.1:8000/api/projects/get-projects-by-staff-id/?staff_id=${staffId}`);
                 if (response.ok) {
                     const data = await response.json();
                     setProjects(data); // Save fetched projects in state
