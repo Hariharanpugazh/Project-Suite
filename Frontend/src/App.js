@@ -16,8 +16,8 @@ function App() {
                 <Route path="/" element={<PreviewPage />} />
                 <Route path="/project/:product_id" element={<ProjectDetailPage />} />
 
-                <Route path="/loginpage" element={<LoginPage />} /> {/* New login route */}
-                <Route path="/register" element={<RegisterPage />} /> {/* New register route */}
+                <Route path="/login" element={<LoginPage />} /> {/* New login route */}
+                <Route path="/newuser" element={<RegisterPage />} /> {/* New register route */}
 
                 {/* Staffflow */}
                 <Route path="/:staff_id/staffdashboard" element={<StaffDashboard />} />
