@@ -443,3 +443,23 @@ def edit_project(request, product_id):
     except Exception as e:
         print(f"Error in edit_project: {e}")
         return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+def delete_project(request, product_id):
+    """
+    Deletes a project based on the given product_id.
+    """
+    if request.method == "DELETE":
+        try:
+            # Find and delete the project
+            result = collection.delete_one({"product_id": int(product_id)})
+
+            if result.deleted_count == 1:
+                return JsonResponse({"message": "Project deleted successfully."}, status=200)
+            else:
+                return JsonResponse({"error": "Project not found."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid HTTP method. Only DELETE is allowed."}, status=405)
+
