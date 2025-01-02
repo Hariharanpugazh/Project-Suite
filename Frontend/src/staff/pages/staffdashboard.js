@@ -15,6 +15,7 @@ const StaffDashboard = () => {
     const [error, setError] = useState(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const [userName, setUserName] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,6 +25,7 @@ const StaffDashboard = () => {
                 const response = await fetch(`http://127.0.0.1:8000/api/projects/get-projects-by-staff-id/?staff_id=${staffId}`);
                 if (response.ok) {
                     const data = await response.json();
+                    console.log(data);
                     setProjects(data); // Save fetched projects in state
                     setFilteredProjects(data); // Initially set filtered projects
                 } else {
@@ -36,6 +38,12 @@ const StaffDashboard = () => {
 
         if (staff_id) {
             fetchProjectsByStaff(staff_id); // Pass the staff_id here
+        }
+
+        // Retrieve user name from local storage
+        const storedUserName = localStorage.getItem("user_name");
+        if (storedUserName) {
+            setUserName(storedUserName);
         }
     }, [staff_id]); // Trigger useEffect when staff_id changes
 
@@ -125,7 +133,7 @@ const StaffDashboard = () => {
                         className="mt-16"
                     >
                         <h2 className="text-4xl font-bold mb-6 text-indigo-900">
-                            Welcome, Staff!
+                            Welcome, {userName}!
                         </h2>
                         <ProjectGrid projects={filteredProjects} />
                     </motion.div>
