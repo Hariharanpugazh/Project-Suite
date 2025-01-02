@@ -76,7 +76,11 @@ def login_user(request):
             return Response({"error": "Invalid email or password."}, status=401)
 
         # Respond with success, user name, and staff_id
-        return Response({"message": f"Welcome, {user['name']}! Login successful.", "staff_id": user['staff_id']}, status=200)
+        return Response({
+            "message": f"Welcome, {user['name']}! Login successful.",
+            "staff_id": user['staff_id'],
+            "user_name": user['name']  # Include the user name in the response
+        }, status=200)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
