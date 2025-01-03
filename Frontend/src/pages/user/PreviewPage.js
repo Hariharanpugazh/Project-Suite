@@ -2,8 +2,8 @@
   import { motion } from "framer-motion";
   import { User, Menu } from "lucide-react";
   import { useNavigate } from "react-router-dom"; // Adjust based on your routing library
-  import Sidebar from "../components/Sidebar";
-  import ProjectGrid from "../components/ProjectGrid";
+  import Sidebar from "../../components/Sidebar";
+  import ProjectGrid from "../../components/ProjectGrid";
 
   const PreviewPage = () => {
     const [projects, setProjects] = useState([]);

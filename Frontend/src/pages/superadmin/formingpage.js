@@ -3,35 +3,37 @@ import React, { useState } from 'react';
 const FormPage = () => {
   const [year, setYear] = useState('');
   const [batch, setBatch] = useState('');
-  const [sequence, setSequence] = useState(1); // Starting sequence number (001)
+  const [sequence, setSequence] = useState(1);
 
   const generatePreview = () => {
     if (year && batch) {
-      const formattedSequence = String(sequence).padStart(3, '0'); // Ensure 3 digits
+      const formattedSequence = String(sequence).padStart(3, '0');
       return `GENAI-${year}-B${batch} ${formattedSequence}`;
     }
     return 'Preview will appear here';
   };
 
   const handlePublish = () => {
-    if (year && batch) {
-      fetch('/api/get_user_info', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ year, batch }),
+    fetch('http://127.0.0.1:8000/api/projects/get_staff_data/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          alert(`Error: ${data.error}`);
+        } else {
+          const staffInfo = data.staff_data.map(
+            (staff, index) => `Staff ${index + 1}: ${JSON.stringify(staff, null, 2)}`
+          ).join('\n');
+          alert(`Staff Data:\n${staffInfo}`);
+        }
       })
-        .then((response) => response.json())
-        .then((data) => {
-          alert(`User Info: ${JSON.stringify(data, null, 2)}`);
-        })
-        .catch((error) => {
-          alert('Error fetching user info: ' + error);
-        });
-    } else {
-      alert('Please select both Year and Batch');
-    }
+      .catch((error) => {
+        alert('Error fetching staff data: ' + error);
+      });
   };
 
   const getAcademicYear = () => {
@@ -44,7 +46,6 @@ const FormPage = () => {
       <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
         <h2 className="mb-6 text-2xl font-bold text-center text-gray-800">Form Page</h2>
 
-        {/* Year Dropdown */}
         <div className="mb-4">
           <label className="block mb-2 text-sm font-medium text-gray-700">Year <span className="text-red-500">*</span></label>
           <select
@@ -59,7 +60,6 @@ const FormPage = () => {
           </select>
         </div>
 
-        {/* Batch Dropdown */}
         <div className="mb-4">
           <label className="block mb-2 text-sm font-medium text-gray-700">Batch <span className="text-red-500">*</span></label>
           <select
@@ -74,13 +74,11 @@ const FormPage = () => {
           </select>
         </div>
 
-        {/* Preview Field */}
         <div className="mb-4">
           <label className="block mb-2 text-sm font-medium text-gray-700">Preview Field</label>
           <div className="w-full p-2 bg-gray-100 border border-gray-300 rounded-md">{generatePreview()}</div>
         </div>
 
-        {/* Publish Button */}
         <div className="flex justify-center">
           <button
             onClick={handlePublish}
