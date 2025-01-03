@@ -392,7 +392,7 @@ def get_projects_by_staff_id(request):
         print(f"Error fetching projects by staff_id: {str(e)}")
         return Response({"error": "Could not fetch projects"}, status=500)
 
-    
+
 # Helper function to serialize MongoDB documents
 def serialize_mongo_document(document):
     def serialize_value(value):
@@ -522,3 +522,55 @@ def delete_project(request, product_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Invalid HTTP method. Only DELETE is allowed."}, status=405)
+    
+@api_view(['POST'])
+def assign_project(request):
+    try:
+        # Extract data from the request
+        year = request.data.get('year')
+        batch = request.data.get('batch')
+        staff_ids = request.data.get('staff_ids')
+        preview = request.data.get('preview')  # Get the preview value
+
+        # Validate required fields
+        if not year or not batch or not staff_ids or not preview:
+            return Response({"error": "Year, Batch, Staff IDs, and Preview are required."}, status=400)
+
+        # Generate a new ObjectId for project_id and convert it to string
+        project_id = str(ObjectId())
+
+        # Prepare project data
+        project_data = {
+            "project_id": preview,
+            "year": year,
+            "batch": batch,
+            "assigned_staff": staff_ids,
+        }
+
+        # Insert project data into the assigned_projects collection
+        db["assigned_projects"].insert_one(project_data)
+
+        # Update staff documents to include the project_id in their assigned_projects field
+        db["staff"].update_many(
+            {"staff_id": {"$in": staff_ids}},
+            {"$push": {"assigned_projects": project_id}}
+        )
+
+        # Return success response
+        return Response({"message": "Project assigned successfully.", "project_id": project_id}, status=201)
+
+    except Exception as e:
+        # Handle exceptions and return an error response
+        return Response({"error": str(e)}, status=500)
+
+
+def get_all_projects(request):
+    collection = db['assigned_projects']
+
+    projects = list(collection.find())
+
+    # Convert ObjectId to string
+    for project in projects:
+        project['_id'] = str(project['_id'])
+
+    return JsonResponse(projects, safe=False)

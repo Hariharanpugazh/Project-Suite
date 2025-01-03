@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { User, Menu, PlusCircle } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import ProjectGrid from "../components/ProjectGrid";
+import ProjectGrid from "../../staff/components/ProjectGrid";
 
 const StaffDashboard = () => {
     const { staff_id } = useParams(); // Fetch staff_id from URL
@@ -52,16 +52,12 @@ const StaffDashboard = () => {
     };
 
     return (
-        <div
-            className={`flex flex-col min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 transition-all duration-300 ${
-                isSidebarOpen ? "pl-80" : "pl-0"
-            }`}
-        >
+        <div className="flex flex-col min-h-screen bg-gray-100">
             <motion.header
                 initial={{ y: -100 }}
                 animate={{ y: 0 }}
                 transition={{ type: "spring", stiffness: 120 }}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 fixed top-0 left-0 right-0 z-50 shadow-lg"
+                className="bg-white text-gray-800 p-4 fixed top-0 left-0 right-0 z-50 shadow-lg"
             >
                 <div className="container mx-auto flex justify-between items-center">
                     <div className="flex items-center">
@@ -69,21 +65,19 @@ const StaffDashboard = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setIsSidebarOpen((prev) => !prev)}
-                            className="mr-4 p-2 rounded-full bg-white text-indigo-600 hover:bg-indigo-100 transition-colors duration-200"
+                            className="mr-4 p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors duration-200"
                             aria-label="Toggle sidebar"
                         >
                             <Menu size={24} />
                         </motion.button>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-200">
-                            Staff Dashboard
-                        </h1>
+                        <h1 className="text-2xl font-bold">Staff Dashboard</h1>
                     </div>
                     <div className="flex items-center space-x-4">
                         <motion.button
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={handleNewProductClick}
-                            className="p-2 rounded-full bg-white text-indigo-600 hover:bg-indigo-100 transition-colors duration-200 flex items-center space-x-1"
+                            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors duration-200 flex items-center space-x-1"
                         >
                             <PlusCircle size={20} />
                             <span className="text-sm font-medium">New Product</span>
@@ -92,7 +86,7 @@ const StaffDashboard = () => {
                             whileHover={{ scale: 1.1 }}
                             whileTap={{ scale: 0.9 }}
                             onClick={() => setIsLoginOpen(!isLoginOpen)}
-                            className="p-2 rounded-full bg-white text-indigo-600 hover:bg-indigo-100 transition-colors duration-200"
+                            className="p-2 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors duration-200"
                         >
                             <User size={24} />
                         </motion.button>
@@ -125,17 +119,28 @@ const StaffDashboard = () => {
                     selectedDomain={selectedDomain}
                     setSelectedDomain={setSelectedDomain}
                 />
-                <main className="flex-1 p-6 md:p-8">
+                <main className="flex-1 p-6 md:p-8 mt-16">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="mt-16"
                     >
-                        <h2 className="text-4xl font-bold mb-6 text-indigo-900">
-                            Welcome, {userName}!
+                        <h2 className="text-4xl font-bold mb-6 text-gray-800">
+                            Welcome to the project portal of SNS
                         </h2>
+                        <button className="bg-yellow-500 text-white px-4 py-2 rounded-full mb-8">
+                            Start Project
+                        </button>
+                        <h3 className="text-2xl font-semibold mb-4 text-gray-700">
+                            Latest Projects
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                            Sort/filter projects by date, domain, college, etc. and view project timelines.
+                        </p>
                         <ProjectGrid projects={filteredProjects} />
+                        <button className="text-yellow-500 mt-4">
+                            View all projects
+                        </button>
                     </motion.div>
                 </main>
             </div>

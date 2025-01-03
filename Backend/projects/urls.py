@@ -11,5 +11,6 @@ urlpatterns = [
     path('edit/<int:product_id>/', edit_project, name='edit_project'),
     path('delete/<int:product_id>/', views.delete_project, name='delete_project'),
     path('get_staff_data/', views.get_staff_data, name='get_staff_data'),
-
+    path('assign_project/', views.assign_project, name='assign_project'),
+    path('get-all-projects/', views.get_all_projects),
 ]

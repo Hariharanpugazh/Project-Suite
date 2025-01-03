@@ -8,6 +8,7 @@ const FormPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterCollege, setFilterCollege] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
+  const [selectedStaff, setSelectedStaff] = useState([]);
 
   const generatePreview = () => {
     if (year && batch) {
@@ -45,6 +46,45 @@ const FormPage = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const handleCheckboxChange = (staffId) => {
+    setSelectedStaff((prevSelected) =>
+      prevSelected.includes(staffId)
+        ? prevSelected.filter((id) => id !== staffId)
+        : [...prevSelected, staffId]
+    );
+  };
+
+  const handleAdd = () => {
+    const previewValue = generatePreview(); // Generate the preview value
+    console.log(previewValue)
+    const projectData = {
+      year,
+      batch,
+      staff_ids: selectedStaff,
+      preview: previewValue, // Include the preview value
+    };
+
+    fetch('http://127.0.0.1:8000/api/projects/assign_project/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(projectData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          alert(`Error: ${data.error}`);
+        } else {
+          alert('Project assigned successfully');
+          setIsModalOpen(false);
+        }
+      })
+      .catch((error) => {
+        alert('Error assigning project: ' + error);
+      });
   };
 
   const filteredData = staffData.filter(staff => {
@@ -129,7 +169,6 @@ const FormPage = () => {
                       <input type="checkbox" className="mr-2" />
                     </th>
                     <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                    {/* <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration Number</th> */}
                     <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                     <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College Name</th>
                   </tr>
@@ -138,10 +177,14 @@ const FormPage = () => {
                   {filteredData.map((staff, index) => (
                     <tr key={index} className="bg-white">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <input type="checkbox" className="mr-2" />
+                        <input
+                          type="checkbox"
+                          className="mr-2"
+                          checked={selectedStaff.includes(staff.staff_id)}
+                          onChange={() => handleCheckboxChange(staff.staff_id)}
+                        />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.name}</td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.staff_id}</td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.department}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.college}</td>
                     </tr>
@@ -157,7 +200,7 @@ const FormPage = () => {
                 Cancel
               </button>
               <button
-                onClick={closeModal}
+                onClick={handleAdd}
                 className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
               >
                 Add
