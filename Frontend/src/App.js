@@ -7,7 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/user/RegisterPage";
 import StaffDashboard from "../src/staff/pages/staffdashboard";
 import StaffViewProject from "../src/staff/pages/StaffViewProject";
-import FormingPage from "./pages/superadmin/formingpage";
+import FormingPage from "./pages/superadmin/Formingpage";
 import SuperadminDashboard from "./pages/superadmin/SuperadminDashboard";
 
 function App() {
