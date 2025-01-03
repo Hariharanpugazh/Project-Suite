@@ -34,6 +34,8 @@ def register_user(request):
         email = request.data.get("email")
         password = request.data.get("password")
         role = request.data.get("role")  # Expecting 'admin' or 'superadmin'
+        college = request.data.get("college", "")  # Optional field for admin
+        department = request.data.get("department", "")  # Optional field for admin
 
         # Validate inputs
         if not name or not email or not password or not role:
@@ -58,7 +60,9 @@ def register_user(request):
             "email": email,
             "password": password,  # Note: Store hashed passwords in production
             "staff_id": staff_id,
-            "role": role
+            "role": role,
+            "college": college if role == "admin" else None,
+            "department": department if role == "admin" else None
         }
 
         # Save user to the appropriate collection based on role
@@ -79,7 +83,7 @@ def register_user(request):
 @api_view(['POST'])
 def login_user(request):
     """
-    Logs in an existing user by checking details in 'user_info' collection.
+    Logs in an existing user by checking details in 'staff' or 'super_admin' collection.
     """
     try:
         email = request.data.get("email")
@@ -88,8 +92,14 @@ def login_user(request):
         if not email or not password:
             return Response({"error": "Email and Password are required."}, status=400)
 
-        # Find user in 'user_info' collection
-        user = db["user_info"].find_one({"email": email, "password": password})
+        # Attempt to find user in 'staff' collection
+        user = db["staff"].find_one({"email": email, "password": password})
+        
+        # If not found in 'staff', attempt to find in 'super_admin' collection
+        if not user:
+            user = db["super_admin"].find_one({"email": email, "password": password})
+        
+        # If still not found, return error
         if not user:
             return Response({"error": "Invalid email or password."}, status=401)
 

@@ -1,25 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const SuperadminDashboard = () => {
+    const { staff_id } = useParams();
     const [username, setUsername] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
         // Retrieve the username from local storage
         const storedUsername = localStorage.getItem('user_name');
-        if (storedUsername) {
+        const storedStaffId = localStorage.getItem('staff_id');
+
+        if (storedUsername && storedStaffId && storedStaffId === staff_id) {
             setUsername(storedUsername);
         } else {
-            console.error('Username not found in local storage');
+            console.error('Username or Staff ID not found in local storage or mismatch');
+            navigate('/login'); // Redirect to login if staff_id does not match
         }
-    }, []);
+    }, [staff_id, navigate]);
 
     const handleLogout = () => {
         // Clear local storage
         localStorage.clear();
         // Navigate to the PreviewPage
-        navigate('/preview');
+        navigate('/');
     };
 
     const projects = [

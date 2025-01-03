@@ -26,7 +26,8 @@ function App() {
                 <Route path="/:staff_id/formpage" element={<FormPage />} />
 
                 {/* Super Adminflow*/}
-                <Route path="/SuperAdmin" element={<SuperadminDashboard />} />
+                <Route path="/:staff_id/SuperAdmin" element={<SuperadminDashboard />} />
+                <Route path="/SuperAdmin/formpage" element={<FormPage />} />
             </Routes>
         </Router>
     );
