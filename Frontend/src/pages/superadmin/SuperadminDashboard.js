@@ -26,6 +26,11 @@ const SuperadminDashboard = () => {
         navigate('/');
     };
 
+    const handleStartProject = () => {
+        // Navigate to the FormPage
+        navigate('/formpage');
+    };
+
     const projects = [
         {
             id: 1,
@@ -71,7 +76,7 @@ const SuperadminDashboard = () => {
                     <div className="px-4 py-6 sm:px-0">
                         <div className="flex justify-between items-center">
                             <h1 className="text-2xl font-bold text-gray-900">Welcome, {username}</h1>
-                            <button className="bg-amber-400 text-white font-bold py-2 px-4 rounded">Start Project</button>
+                            <button onClick={handleStartProject} className="bg-amber-400 text-white font-bold py-2 px-4 rounded">Start Project</button>
                         </div>
                     </div>
                     <div className="mt-8">

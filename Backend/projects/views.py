@@ -112,8 +112,34 @@ def login_user(request):
         }, status=200)
 
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response({"error": str(e)},status=500)
+    
+@api_view(['GET'])
+def get_staff_data(request):
+    """
+    Fetches all staff data from the 'staff' collection, including college and department details.
+    """
+    try:
+        staff_data = list(db["staff"].find({}, {"_id": 0}))  # Fetch all fields except ObjectId
+        if not staff_data:
+            return Response({"error": "No staff data found."}, status=404)
+        
+        # Process staff data to include formatted response
+        processed_staff_data = [
+            {
+                "name": staff.get("name", "N/A"),
+                "email": staff.get("email", "N/A"),
+                "staff_id": staff.get("staff_id", "N/A"),
+                "role": staff.get("role", "N/A"),
+                "college": staff.get("college", "N/A"),
+                "department": staff.get("department", "N/A")
+            }
+            for staff in staff_data
+        ]
 
+        return Response({"staff_data": processed_staff_data}, status=200)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
     
 @api_view(['POST'])
 def save_project(request):
