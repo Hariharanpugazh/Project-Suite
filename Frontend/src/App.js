@@ -7,8 +7,11 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/user/RegisterPage";
 import StaffDashboard from "../src/staff/pages/staffdashboard";
 import StaffViewProject from "../src/staff/pages/StaffViewProject";
-import FormingPage from "./pages/superadmin/Formingpage";
+import FormingPage from "./pages/superadmin/formingpage";
 import SuperadminDashboard from "./pages/superadmin/SuperadminDashboard";
+import Home from "./pages/Home";
+import ProjectsPage from "./pages/ProjectsPage";
+ 
 
 function App() {
     return (
@@ -30,6 +33,8 @@ function App() {
                 <Route path="/:staff_id/SuperAdmin" element={<SuperadminDashboard />} />
                 {/* <Route path="/SuperAdmin/formpage" element={<FormPage />} /> */}
                 <Route path="/formpage" element={<FormingPage />} />
+                <Route path="/Home" element={<Home />} />
+                <Route path="/ProjectsPage" element={<ProjectsPage /> } />
             </Routes>
         </Router>
     );
