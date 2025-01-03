@@ -7,22 +7,24 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import StaffDashboard from "../src/staff/pages/staffdashboard";
 import StaffViewProject from "../src/staff/pages/StaffViewProject";
+import FormingPage from "../src/staff/pages/superadmin/formingpage";
 
 function App() {
     return (
         <Router>
             <Routes>
-                {/* userflow */}
+                {/* User Flow */}
                 <Route path="/" element={<PreviewPage />} />
                 <Route path="/project/:product_id" element={<ProjectDetailPage />} />
 
                 <Route path="/login" element={<LoginPage />} /> {/* New login route */}
                 <Route path="/newuser" element={<RegisterPage />} /> {/* New register route */}
 
-                {/* Staffflow */}
+                {/* Staff Flow */}
                 <Route path="/:staff_id/staffdashboard" element={<StaffDashboard />} />
                 <Route path="/:staff_id/staffviewproject/:product_id" element={<StaffViewProject />} />
                 <Route path="/:staff_id/formpage" element={<FormPage />} />
+                <Route path="/formingpage" element={<FormingPage />} />
             </Routes>
         </Router>
     );
