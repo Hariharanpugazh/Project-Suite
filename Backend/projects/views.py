@@ -26,8 +26,8 @@ def sanitize_field(field_value, default="NA"):
 @api_view(['POST'])
 def register_user(request):
     """
-    Registers a new user and saves details in 'user_info' collection.
-    Adds role-based logic for 'admin' and 'superadmin'.
+    Registers a new user and saves details in the appropriate collection
+    ('staff' for admin, 'super_admin' for superadmin).
     """
     try:
         name = request.data.get("name")
@@ -35,21 +35,24 @@ def register_user(request):
         password = request.data.get("password")
         role = request.data.get("role")  # Expecting 'admin' or 'superadmin'
 
+        # Validate inputs
         if not name or not email or not password or not role:
             return Response({"error": "Name, Email, Password, and Role are required."}, status=400)
 
         if role not in ["admin", "superadmin"]:
             return Response({"error": "Invalid role. Role must be 'admin' or 'superadmin'."}, status=400)
 
-        # Check if the user already exists in the 'user_info' collection
-        existing_user = db["user_info"].find_one({"email": email})
-        if existing_user:
+        # Check if the user already exists in either collection
+        existing_user_in_staff = db["staff"].find_one({"email": email})
+        existing_user_in_superadmin = db["super_admin"].find_one({"email": email})
+
+        if existing_user_in_staff or existing_user_in_superadmin:
             return Response({"error": "User already exists."}, status=400)
 
         # Generate a new ObjectId for staff_id and convert it to string
         staff_id = str(ObjectId())
 
-        # Save user to the 'user_info' collection with the specified role
+        # Prepare user data
         user_data = {
             "name": name,
             "email": email,
@@ -57,7 +60,12 @@ def register_user(request):
             "staff_id": staff_id,
             "role": role
         }
-        db["user_info"].insert_one(user_data)
+
+        # Save user to the appropriate collection based on role
+        if role == "admin":
+            db["staff"].insert_one(user_data)
+        elif role == "superadmin":
+            db["super_admin"].insert_one(user_data)
 
         return Response({
             "message": "User registered successfully.",
