@@ -79,7 +79,7 @@ def register_user(request):
 @api_view(['POST'])
 def login_user(request):
     """
-    Logs in an existing user by checking details in 'user_info' collection.
+    Logs in an existing user by checking details in 'staff' or 'super_admin' collection.
     """
     try:
         email = request.data.get("email")
@@ -88,8 +88,14 @@ def login_user(request):
         if not email or not password:
             return Response({"error": "Email and Password are required."}, status=400)
 
-        # Find user in 'user_info' collection
-        user = db["user_info"].find_one({"email": email, "password": password})
+        # Attempt to find user in 'staff' collection
+        user = db["staff"].find_one({"email": email, "password": password})
+        
+        # If not found in 'staff', attempt to find in 'super_admin' collection
+        if not user:
+            user = db["super_admin"].find_one({"email": email, "password": password})
+        
+        # If still not found, return error
         if not user:
             return Response({"error": "Invalid email or password."}, status=401)
 
@@ -102,8 +108,34 @@ def login_user(request):
         }, status=200)
 
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response({"error": str(e)},status=500)
+    
+@api_view(['GET'])
+def get_staff_data(request):
+    """
+    Fetches all staff data from the 'staff' collection, including college and department details.
+    """
+    try:
+        staff_data = list(db["staff"].find({}, {"_id": 0}))  # Fetch all fields except ObjectId
+        if not staff_data:
+            return Response({"error": "No staff data found."}, status=404)
+        
+        # Process staff data to include formatted response
+        processed_staff_data = [
+            {
+                "name": staff.get("name", "N/A"),
+                "email": staff.get("email", "N/A"),
+                "staff_id": staff.get("staff_id", "N/A"),
+                "role": staff.get("role", "N/A"),
+                "college": staff.get("college", "N/A"),
+                "department": staff.get("department", "N/A")
+            }
+            for staff in staff_data
+        ]
 
+        return Response({"staff_data": processed_staff_data}, status=200)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
     
 @api_view(['POST'])
 def save_project(request):
