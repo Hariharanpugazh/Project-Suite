@@ -5,6 +5,7 @@ const RegisterPage = () => {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [role, setRole] = useState("admin"); // Default to "admin"
     const [message, setMessage] = useState("");
     const navigate = useNavigate();
 
@@ -18,13 +19,13 @@ const RegisterPage = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ name, email, password }),
+                body: JSON.stringify({ name, email, password, role }),
             });
 
             const data = await response.json();
             if (response.ok) {
                 setMessage(data.message);
-                setTimeout(() => navigate("/login"), 2000); // Redirect after successful registration
+                setTimeout(() => navigate("/login"), 2000);
             } else {
                 setMessage(data.error || "Registration failed.");
             }
@@ -68,6 +69,17 @@ const RegisterPage = () => {
                             className="w-full px-3 py-2 border rounded-md"
                             required
                         />
+                    </div>
+                    <div className="mb-4">
+                        <label className="block text-gray-700">Role</label>
+                        <select
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="w-full px-3 py-2 border rounded-md"
+                        >
+                            <option value="admin">Admin</option>
+                            <option value="superadmin">SuperAdmin</option>
+                        </select>
                     </div>
                     <button
                         type="submit"

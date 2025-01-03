@@ -26,34 +26,52 @@ def sanitize_field(field_value, default="NA"):
 @api_view(['POST'])
 def register_user(request):
     """
-    Registers a new user and saves details in 'user_info' collection.
+    Registers a new user and saves details in the appropriate collection
+    ('staff' for admin, 'super_admin' for superadmin).
     """
     try:
         name = request.data.get("name")
         email = request.data.get("email")
         password = request.data.get("password")
+        role = request.data.get("role")  # Expecting 'admin' or 'superadmin'
 
-        if not name or not email or not password:
-            return Response({"error": "Name, Email, and Password are required."}, status=400)
+        # Validate inputs
+        if not name or not email or not password or not role:
+            return Response({"error": "Name, Email, Password, and Role are required."}, status=400)
 
-        # Check if the user already exists in the 'user_info' collection
-        existing_user = db["user_info"].find_one({"email": email})
-        if existing_user:
+        if role not in ["admin", "superadmin"]:
+            return Response({"error": "Invalid role. Role must be 'admin' or 'superadmin'."}, status=400)
+
+        # Check if the user already exists in either collection
+        existing_user_in_staff = db["staff"].find_one({"email": email})
+        existing_user_in_superadmin = db["super_admin"].find_one({"email": email})
+
+        if existing_user_in_staff or existing_user_in_superadmin:
             return Response({"error": "User already exists."}, status=400)
 
         # Generate a new ObjectId for staff_id and convert it to string
         staff_id = str(ObjectId())
 
-        # Save user to the 'user_info' collection
+        # Prepare user data
         user_data = {
             "name": name,
             "email": email,
             "password": password,  # Note: Store hashed passwords in production
-            "staff_id": staff_id
+            "staff_id": staff_id,
+            "role": role
         }
-        db["user_info"].insert_one(user_data)
 
-        return Response({"message": "User registered successfully.", "staff_id": staff_id}, status=201)
+        # Save user to the appropriate collection based on role
+        if role == "admin":
+            db["staff"].insert_one(user_data)
+        elif role == "superadmin":
+            db["super_admin"].insert_one(user_data)
+
+        return Response({
+            "message": "User registered successfully.",
+            "staff_id": staff_id,
+            "role": role
+        }, status=201)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
@@ -75,15 +93,17 @@ def login_user(request):
         if not user:
             return Response({"error": "Invalid email or password."}, status=401)
 
-        # Respond with success, user name, and staff_id
+        # Respond with success, user name, role, and staff_id
         return Response({
             "message": f"Welcome, {user['name']}! Login successful.",
             "staff_id": user['staff_id'],
-            "user_name": user['name']  # Include the user name in the response
+            "user_name": user['name'],
+            "role": user.get('role', 'N/A')  # Include the user's role in the response
         }, status=200)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
     
 @api_view(['POST'])
 def save_project(request):
@@ -466,4 +486,3 @@ def delete_project(request, product_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Invalid HTTP method. Only DELETE is allowed."}, status=405)
-

@@ -10,16 +10,16 @@ const LoginPage = () => {
     const [hoveredInput, setHoveredInput] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
     const [theme, setTheme] = useState(() => {
-        return localStorage.getItem('theme') || 'light';
+        return localStorage.getItem("theme") || "light";
     });
     const navigate = useNavigate();
 
     useEffect(() => {
-        localStorage.setItem('theme', theme);
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
+        localStorage.setItem("theme", theme);
+        if (theme === "dark") {
+            document.documentElement.classList.add("dark");
         } else {
-            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.remove("dark");
         }
     }, [theme]);
 
@@ -30,8 +30,8 @@ const LoginPage = () => {
             setMousePosition({ x, y });
         };
 
-        window.addEventListener('mousemove', handleMouseMove);
-        return () => window.removeEventListener('mousemove', handleMouseMove);
+        window.addEventListener("mousemove", handleMouseMove);
+        return () => window.removeEventListener("mousemove", handleMouseMove);
     }, []);
 
     const handleLogin = async (e) => {
@@ -50,9 +50,18 @@ const LoginPage = () => {
             const data = await response.json();
             if (response.ok) {
                 setMessage(data.message);
-                localStorage.setItem("staff_id", data.staff_id); // Store staff_id in local storage
-                localStorage.setItem("user_name", data.user_name); // Store user name in local storage
-                setTimeout(() => navigate(`/${data.staff_id}/staffdashboard`), 2000); // Redirect with URL format
+                localStorage.setItem("staff_id", data.staff_id);
+                localStorage.setItem("user_name", data.user_name);
+                localStorage.setItem("role", data.role);
+
+                // Redirect based on role
+                if (data.role === "superadmin") {
+                    setTimeout(() => navigate(`/SuperAdmin`), 2000);
+                } else if (data.role === "admin") {
+                    setTimeout(() => navigate(`/${data.staff_id}/staffdashboard`), 2000);
+                } else {
+                    setMessage("Invalid role. Contact the administrator.");
+                }
             } else {
                 setMessage(data.error || "Login failed.");
             }
@@ -63,19 +72,18 @@ const LoginPage = () => {
     };
 
     const toggleTheme = () => {
-        setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+        setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
     };
 
-    const isDarkMode = theme === 'dark';
+    const isDarkMode = theme === "dark";
 
-    // Calculate grid offset based on hovered input and mouse position
     const getGridOffset = () => {
         if (!hoveredInput) return { x: mousePosition.x / 40, y: mousePosition.y / 40 };
 
-        const intensity = 2; // Increased effect intensity when hovering over inputs
+        const intensity = 2;
         return {
             x: mousePosition.x / (40 / intensity),
-            y: mousePosition.y / (40 / intensity)
+            y: mousePosition.y / (40 / intensity),
         };
     };
 
