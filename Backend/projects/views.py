@@ -34,6 +34,8 @@ def register_user(request):
         email = request.data.get("email")
         password = request.data.get("password")
         role = request.data.get("role")  # Expecting 'admin' or 'superadmin'
+        college = request.data.get("college", "")  # Optional field for admin
+        department = request.data.get("department", "")  # Optional field for admin
 
         # Validate inputs
         if not name or not email or not password or not role:
@@ -58,7 +60,9 @@ def register_user(request):
             "email": email,
             "password": password,  # Note: Store hashed passwords in production
             "staff_id": staff_id,
-            "role": role
+            "role": role,
+            "college": college if role == "admin" else None,
+            "department": department if role == "admin" else None
         }
 
         # Save user to the appropriate collection based on role

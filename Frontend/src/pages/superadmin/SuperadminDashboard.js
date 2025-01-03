@@ -1,25 +1,34 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const SuperadminDashboard = () => {
+    const { staff_id } = useParams();
     const [username, setUsername] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
         // Retrieve the username from local storage
         const storedUsername = localStorage.getItem('user_name');
-        if (storedUsername) {
+        const storedStaffId = localStorage.getItem('staff_id');
+
+        if (storedUsername && storedStaffId && storedStaffId === staff_id) {
             setUsername(storedUsername);
         } else {
-            console.error('Username not found in local storage');
+            console.error('Username or Staff ID not found in local storage or mismatch');
+            navigate('/login'); // Redirect to login if staff_id does not match
         }
-    }, []);
+    }, [staff_id, navigate]);
 
     const handleLogout = () => {
         // Clear local storage
         localStorage.clear();
         // Navigate to the PreviewPage
-        navigate('/preview');
+        navigate('/');
+    };
+
+    const handleStartProject = () => {
+        // Navigate to the FormPage
+        navigate('/formpage');
     };
 
     const projects = [
@@ -67,7 +76,12 @@ const SuperadminDashboard = () => {
                     <div className="px-4 py-6 sm:px-0">
                         <div className="flex justify-between items-center">
                             <h1 className="text-2xl font-bold text-gray-900">Welcome, {username}</h1>
-                            <button className="bg-amber-400 text-white font-bold py-2 px-4 rounded">Start Project</button>
+                            <button
+                                className="bg-amber-400 text-white font-bold py-2 px-4 rounded"
+                                onClick={() => navigate('/FormingPage')}
+                            >
+                                Start Project
+                            </button>
                         </div>
                     </div>
                     <div className="mt-8">

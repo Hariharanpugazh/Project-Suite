@@ -7,7 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/user/RegisterPage";
 import StaffDashboard from "../src/staff/pages/staffdashboard";
 import StaffViewProject from "../src/staff/pages/StaffViewProject";
-import FormingPage from "./pages/superadmin/formingpage";
+import FormingPage from "./pages/superadmin/Formingpage";
 import SuperadminDashboard from "./pages/superadmin/SuperadminDashboard";
 
 function App() {
@@ -25,8 +25,11 @@ function App() {
                 <Route path="/:staff_id/staffdashboard" element={<StaffDashboard />} />
                 <Route path="/:staff_id/staffviewproject/:product_id" element={<StaffViewProject />} />
                 <Route path="/:staff_id/formpage" element={<FormPage />} />
-                <Route path="/SuperAdmin" element={<SuperadminDashboard />} />
-                <Route path="/formingpage" element={<FormingPage />} />
+
+                {/* Super Adminflow*/}
+                <Route path="/:staff_id/SuperAdmin" element={<SuperadminDashboard />} />
+                {/* <Route path="/SuperAdmin/formpage" element={<FormPage />} /> */}
+                <Route path="/formpage" element={<FormingPage />} />
             </Routes>
         </Router>
     );
