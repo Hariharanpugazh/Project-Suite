@@ -56,7 +56,7 @@ const LoginPage = () => {
 
                 // Redirect based on role
                 if (data.role === "superadmin") {
-                    setTimeout(() => navigate(`/SuperAdmin`), 2000);
+                    setTimeout(() => navigate(`/${data.staff_id}/SuperAdmin`), 2000);
                 } else if (data.role === "admin") {
                     setTimeout(() => navigate(`/${data.staff_id}/staffdashboard`), 2000);
                 } else {

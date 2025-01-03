@@ -6,6 +6,8 @@ const RegisterPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("admin"); // Default to "admin"
+    const [college, setCollege] = useState("");
+    const [department, setDepartment] = useState("");
     const [message, setMessage] = useState("");
     const navigate = useNavigate();
 
@@ -19,7 +21,7 @@ const RegisterPage = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ name, email, password, role }),
+                body: JSON.stringify({ name, email, password, role, college, department }),
             });
 
             const data = await response.json();
@@ -81,6 +83,39 @@ const RegisterPage = () => {
                             <option value="superadmin">SuperAdmin</option>
                         </select>
                     </div>
+                    {role === "admin" && (
+                        <>
+                            <div className="mb-4">
+                                <label className="block text-gray-700">College Name</label>
+                                <select
+                                    value={college}
+                                    onChange={(e) => setCollege(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md"
+                                    required
+                                >
+                                    <option value="">Select College</option>
+                                    <option value="SNS ACADEMY - A FINGERPRINT INTERNATIONAL CBSE SCHOOL">SNS ACADEMY - A FINGERPRINT INTERNATIONAL CBSE SCHOOL</option>
+                                    <option value="DR. SNS RAJALAKSHMI COLLEGE OF ARTS AND SCIENCE">DR. SNS RAJALAKSHMI COLLEGE OF ARTS AND SCIENCE</option>
+                                    <option value="SNS COLLEGE OF TECHNOLOGY">SNS COLLEGE OF TECHNOLOGY</option>
+                                    <option value="SNS COLLEGE OF ENGINEERING">SNS COLLEGE OF ENGINEERING</option>
+                                    <option value="SNS COLLEGE OF PHARMACY AND HEALTH SCIENCES">SNS COLLEGE OF PHARMACY AND HEALTH SCIENCES</option>
+                                    <option value="SNS COLLEGE OF ALLIED HEALTH SCIENCES">SNS COLLEGE OF ALLIED HEALTH SCIENCES</option>
+                                    <option value="DR. SNS COLLEGE OF EDUCATION">DR. SNS COLLEGE OF EDUCATION</option>
+                                    <option value="SNS COLLEGE OF PHYSIOTHERAPY">SNS COLLEGE OF PHYSIOTHERAPY</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-gray-700">Department</label>
+                                <input
+                                    type="text"
+                                    value={department}
+                                    onChange={(e) => setDepartment(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md"
+                                    required
+                                />
+                            </div>
+                        </>
+                    )}
                     <button
                         type="submit"
                         className="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600"

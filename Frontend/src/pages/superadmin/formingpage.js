@@ -4,6 +4,10 @@ const FormPage = () => {
   const [year, setYear] = useState('');
   const [batch, setBatch] = useState('');
   const [sequence, setSequence] = useState(1);
+  const [staffData, setStaffData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterCollege, setFilterCollege] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
 
   const generatePreview = () => {
     if (year && batch) {
@@ -25,10 +29,8 @@ const FormPage = () => {
         if (data.error) {
           alert(`Error: ${data.error}`);
         } else {
-          const staffInfo = data.staff_data.map(
-            (staff, index) => `Staff ${index + 1}: ${JSON.stringify(staff, null, 2)}`
-          ).join('\n');
-          alert(`Staff Data:\n${staffInfo}`);
+          setStaffData(data.staff_data);
+          setIsModalOpen(true);
         }
       })
       .catch((error) => {
@@ -40,6 +42,16 @@ const FormPage = () => {
     const currentYear = new Date().getFullYear();
     return `${currentYear}-${currentYear + 1}`;
   };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const filteredData = staffData.filter(staff => {
+    const collegeMatch = !filterCollege || staff.college.includes(filterCollege);
+    const departmentMatch = !filterDepartment || staff.department.includes(filterDepartment);
+    return collegeMatch && departmentMatch;
+  });
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -88,6 +100,72 @@ const FormPage = () => {
           </button>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
+            <h2 className="text-xl font-bold mb-4">Select Students</h2>
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Filter by College Name"
+                value={filterCollege}
+                onChange={(e) => setFilterCollege(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-2"
+              />
+              <input
+                type="text"
+                placeholder="Filter by Department"
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <input type="checkbox" className="mr-2" />
+                    </th>
+                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    {/* <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration Number</th> */}
+                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th className="px-6 py-3 border-b border-gray-200 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((staff, index) => (
+                    <tr key={index} className="bg-white">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <input type="checkbox" className="mr-2" />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.name}</td>
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.staff_id}</td> */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.department}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.college}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-white bg-gray-500 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
