@@ -113,7 +113,6 @@
 
 // export default SuperadminDashboard;
 
-// SuperadminDashboard.js
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, Menu, PlusCircle } from "lucide-react";
@@ -123,6 +122,7 @@ import ProjectCard from "../superadmin/components/ProjectCard";
 const SuperadminDashboard = () => {
     const [projects, setProjects] = useState([]);
     const [userName, setUserName] = useState("");
+    const [staffId, setStaffId] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -142,15 +142,19 @@ const SuperadminDashboard = () => {
 
         fetchProjects();
 
-        // Retrieve user name from local storage
+        // Retrieve user name and staff ID from local storage
         const storedUserName = localStorage.getItem("user_name");
+        const storedStaffId = localStorage.getItem("staff_id");
         if (storedUserName) {
             setUserName(storedUserName);
+        }
+        if (storedStaffId) {
+            setStaffId(storedStaffId);
         }
     }, []);
 
     const handleNewProjectClick = () => {
-        navigate('/create-project'); // Navigate to create project page
+        navigate(`/${staffId}/createproject`); // Navigate to create project page
     };
 
     return (
@@ -192,9 +196,6 @@ const SuperadminDashboard = () => {
                     <h2 className="text-4xl font-bold mb-6 text-gray-800">
                         Welcome, {userName}!
                     </h2>
-                    <button className="bg-yellow-500 text-white px-4 py-2 rounded-full mb-8">
-                        Start Project
-                    </button>
                     <h3 className="text-2xl font-semibold mb-4 text-gray-700">
                         Latest Projects
                     </h3>
@@ -213,3 +214,4 @@ const SuperadminDashboard = () => {
 };
 
 export default SuperadminDashboard;
+

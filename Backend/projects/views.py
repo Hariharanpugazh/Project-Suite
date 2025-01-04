@@ -574,3 +574,27 @@ def get_all_projects(request):
         project['_id'] = str(project['_id'])
 
     return JsonResponse(projects, safe=False)
+
+def get_projects_by_staff_id(request):
+    staff_id = request.GET.get('staff_id')
+    if not staff_id:
+        return JsonResponse({'error': 'staff_id is required'}, status=400)
+
+    try:
+        collection = db['assigned_projects']
+
+        # Query the collection
+        projects = collection.find({'assigned_staff': ObjectId(staff_id)})
+
+        # Convert the projects to a list of dictionaries
+        projects_list = []
+        for project in projects:
+            project['_id'] = str(project['_id'])  # Convert ObjectId to string
+            project['assigned_staff'] = [str(staff) for staff in project['assigned_staff']]  # Convert ObjectId to string
+            projects_list.append(project)
+
+        return JsonResponse(projects_list, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+    finally:
+        client.close()

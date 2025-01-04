@@ -19,7 +19,6 @@ const StaffDashboard = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Ensure staff_id is passed to the API call
         const fetchProjectsByStaff = async (staffId) => {
             try {
                 const response = await fetch(`http://127.0.0.1:8000/api/projects/get-projects-by-staff-id/?staff_id=${staffId}`);
@@ -32,7 +31,7 @@ const StaffDashboard = () => {
                     console.error(`Failed to fetch projects for staff_id ${staffId}`);
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error("Error:", error);
             }
         };
 
@@ -128,8 +127,11 @@ const StaffDashboard = () => {
                         <h2 className="text-4xl font-bold mb-6 text-gray-800">
                             Welcome to the project portal of SNS
                         </h2>
-                        <button className="bg-yellow-500 text-white px-4 py-2 rounded-full mb-8">
-                            Start Project
+                        <button
+                            className="bg-yellow-500 text-white px-4 py-2 rounded-full mb-8"
+                            onClick={handleNewProductClick} // Navigate to formpage
+                        >
+                            Create Project
                         </button>
                         <h3 className="text-2xl font-semibold mb-4 text-gray-700">
                             Latest Projects
@@ -138,7 +140,10 @@ const StaffDashboard = () => {
                             Sort/filter projects by date, domain, college, etc. and view project timelines.
                         </p>
                         <ProjectGrid projects={filteredProjects} />
-                        <button className="text-yellow-500 mt-4">
+                        <button
+                            className="text-yellow-500 mt-4"
+                            onClick={() => navigate(`/projects`)} // Example navigation for "View all projects"
+                        >
                             View all projects
                         </button>
                     </motion.div>

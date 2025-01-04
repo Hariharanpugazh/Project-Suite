@@ -13,4 +13,5 @@ urlpatterns = [
     path('get_staff_data/', views.get_staff_data, name='get_staff_data'),
     path('assign_project/', views.assign_project, name='assign_project'),
     path('get-all-projects/', views.get_all_projects),
+    path('get-projects-by-staff-id/', get_projects_by_staff_id, name='get_projects_by_staff_id'),
 ]
